@@ -12,6 +12,7 @@ import {
   Lock,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { KtaCard } from '../../components/common/KtaCard';
 
 export const ProfilePage: React.FC = () => {
   const { account, person, workspace, switchWorkspace } = useAuth();
@@ -49,89 +50,26 @@ export const ProfilePage: React.FC = () => {
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left Column: Digital KTA Card */}
-        <div className="lg:col-span-5 space-y-4">
-          <div className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center justify-between">
-            <span>Kartu Tanda Anggota (KTA)</span>
-            <button
-              onClick={() => setIsFlipped(!isFlipped)}
-              className="text-blue-700 font-semibold hover:underline text-[11px]"
-            >
-              {isFlipped ? 'Lihat Sisi Depan' : 'Putar Sisi Belakang'}
-            </button>
+      {/* Two-Sided Digital KTA Component */}
+      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div className="flex items-center gap-2">
+            <CreditCard className="w-5 h-5 text-blue-700" />
+            <h2 className="font-bold text-base text-slate-900">
+              Kartu Tanda Anggota (KTA) Digital Resmi
+            </h2>
           </div>
-
-          {!isFlipped ? (
-            /* Front of KTA */
-            <div className="bg-gradient-to-br from-[#102C63] via-[#0d234f] to-[#1667C7] text-white rounded-2xl p-6 shadow-xl relative overflow-hidden space-y-5 border border-blue-900">
-              <div className="flex items-center justify-between border-b border-white/15 pb-4">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-red-600 flex items-center justify-center font-black text-sm">
-                    P
-                  </div>
-                  <div>
-                    <div className="font-extrabold text-xs tracking-wider uppercase">PARTAI PERINDO</div>
-                    <div className="text-[10px] text-white/70">PERSATUAN INDONESIA</div>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono bg-white/20 px-2 py-0.5 rounded text-white font-bold">
-                  KTA DIGITAL
-                </span>
-              </div>
-
-              <div className="space-y-3">
-                <div>
-                  <span className="text-[10px] text-white/60 uppercase tracking-wider block">Nama Lengkap</span>
-                  <span className="text-base font-bold text-white tracking-wide">{person?.name}</span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 text-xs">
-                  <div>
-                    <span className="text-[10px] text-white/60 uppercase tracking-wider block">Nomor KTA</span>
-                    <span className="font-mono text-xs font-semibold text-sky-200">{person?.ktaNumber}</span>
-                  </div>
-                  <div>
-                    <span className="text-[10px] text-white/60 uppercase tracking-wider block">Wilayah Domisili</span>
-                    <span className="text-xs text-white/90">{person?.city}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-white/15 flex items-center justify-between text-[11px] text-white/70">
-                <div className="flex items-center gap-1.5">
-                  <QrCode className="w-5 h-5 text-white" />
-                  <span>Validasi QR DPP</span>
-                </div>
-                <span className="font-mono text-[10px]">Tgl Gabung: {person?.joinedDate}</span>
-              </div>
-            </div>
-          ) : (
-            /* Back of KTA */
-            <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden space-y-4 border border-slate-800">
-              <div className="border-b border-slate-800 pb-3">
-                <div className="font-bold text-xs uppercase tracking-wider text-slate-300">
-                  Ketentuan Pemegang KTA
-                </div>
-              </div>
-              <ul className="text-[11px] text-slate-400 space-y-2 list-disc pl-4 leading-relaxed">
-                <li>Kartu ini adalah identitas resmi kader Partai Perindo (Data Simulasi).</li>
-                <li>Dilarang memindahtangankan kartu kepada pihak lain tanpa izin partai.</li>
-                <li>Jika menemukan kartu ini, harap hubungi sekretariat partai terdekat.</li>
-              </ul>
-              <div className="pt-4 border-t border-slate-800 text-center text-[10px] text-slate-500 font-mono">
-                DPP PARTAI PERINDO · JAKARTA
-              </div>
-            </div>
-          )}
-
-          <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-center text-xs text-slate-500">
-            Klik 'Putar Sisi Belakang' untuk melihat ketentuan kartu.
-          </div>
+          <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
+            KTA AKTIF
+          </span>
         </div>
 
-        {/* Right Column: Profile Specs & Appointments */}
-        <div className="lg:col-span-7 space-y-6">
+        {person && <KtaCard person={person} layout="side-by-side" />}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        {/* Left Column: Profile Specs */}
+        <div className="lg:col-span-6 space-y-6">
           <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs space-y-4">
             <h2 className="font-bold text-sm text-slate-900 border-b border-slate-100 pb-3">
               Informasi Biodata Kader

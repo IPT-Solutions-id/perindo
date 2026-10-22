@@ -14,6 +14,7 @@ import {
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
 import { Person } from '../../types';
+import { KtaCard } from '../../components/common/KtaCard';
 
 export const MembersPage: React.FC = () => {
   const { members, addMember } = useData();
@@ -207,10 +208,10 @@ export const MembersPage: React.FC = () => {
       {/* Digital KTA Modal */}
       {selectedMemberForKta && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
+          <div className="bg-white rounded-2xl max-w-2xl w-full shadow-2xl border border-slate-200 overflow-hidden">
             <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider">
-                Kartu Tanda Anggota (KTA Digital)
+                Kartu Tanda Anggota (KTA Digital Resmi) — {selectedMemberForKta.name}
               </span>
               <button
                 onClick={() => setSelectedMemberForKta(null)}
@@ -221,48 +222,12 @@ export const MembersPage: React.FC = () => {
             </div>
 
             <div className="p-6 space-y-4">
-              {/* KTA Card Design */}
-              <div className="bg-gradient-to-br from-[#102C63] via-[#0d234f] to-[#1667C7] text-white rounded-2xl p-5 shadow-lg space-y-4 relative overflow-hidden">
-                <div className="flex items-center justify-between border-b border-white/15 pb-3">
-                  <div>
-                    <div className="text-[10px] font-bold tracking-widest uppercase text-white/80">PARTAI PERINDO</div>
-                    <div className="text-xs font-extrabold text-white">KARTU TANDA ANGGOTA</div>
-                  </div>
-                  <span className="text-[10px] bg-red-600 px-2 py-0.5 rounded font-bold">
-                    RESMI SIMULASI
-                  </span>
-                </div>
+              <KtaCard person={selectedMemberForKta} layout="flip" />
 
-                <div className="space-y-2">
-                  <div>
-                    <span className="text-[10px] text-white/60 uppercase block">Nama Anggota</span>
-                    <span className="text-sm font-bold text-white tracking-wide">{selectedMemberForKta.name}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <span className="text-[10px] text-white/60 uppercase block">Nomor KTA</span>
-                      <span className="font-mono text-[11px] text-sky-200">{selectedMemberForKta.ktaNumber}</span>
-                    </div>
-                    <div>
-                      <span className="text-[10px] text-white/60 uppercase block">Domisili</span>
-                      <span className="text-[11px]">{selectedMemberForKta.city}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-white/15 flex items-center justify-between text-[10px] text-white/70">
-                  <div className="flex items-center gap-1.5">
-                    <QrCode className="w-5 h-5 text-white" />
-                    <span>Scan Validasi DPP</span>
-                  </div>
-                  <span className="font-mono">{selectedMemberForKta.joinedDate}</span>
-                </div>
-              </div>
-
-              <div className="text-center">
+              <div className="flex justify-end pt-2 border-t border-slate-100">
                 <button
                   onClick={() => setSelectedMemberForKta(null)}
-                  className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-semibold"
+                  className="px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-semibold hover:bg-slate-800 transition-colors"
                 >
                   Tutup Tampilan KTA
                 </button>

@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useData } from '../../context/DataContext';
+import { KtaCard } from '../../components/common/KtaCard';
 
 interface OverviewPageProps {
   onNavigate: (path: string) => void;
@@ -64,49 +65,22 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate, onOpenIn
           </button>
         </div>
 
-        {/* Digital KTA Simulation Card Preview */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          <div className="lg:col-span-6 bg-gradient-to-br from-[#102C63] via-[#0d234f] to-[#1667C7] text-white rounded-2xl p-6 shadow-md relative overflow-hidden">
-            <div className="flex items-center justify-between border-b border-white/15 pb-4 mb-5">
+        {/* Digital KTA Official Design Preview */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <div className="lg:col-span-7 bg-white rounded-2xl border border-slate-200 p-5 shadow-2xs space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-red-600 flex items-center justify-center font-extrabold text-xs">
-                  P
-                </div>
-                <div>
-                  <div className="font-bold text-xs tracking-wide">KARTU TANDA ANGGOTA (KTA)</div>
-                  <div className="text-[10px] text-white/70">PARTAI PERINDO · SIMULASI</div>
-                </div>
+                <CreditCard className="w-4 h-4 text-blue-700" />
+                <span className="font-bold text-xs text-slate-900">
+                  Kartu Tanda Anggota (KTA) Sisi Depan & Belakang
+                </span>
               </div>
-              <span className="text-[10px] font-mono bg-white/20 px-2 py-0.5 rounded text-white font-medium">
-                KTA AKTIF
+              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded">
+                TERVERIFIKASI RESMI
               </span>
             </div>
 
-            <div className="space-y-3">
-              <div>
-                <span className="text-[10px] text-white/60 uppercase tracking-wider block">Nama Lengkap</span>
-                <span className="text-base font-bold text-white tracking-wide">{person?.name}</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <span className="text-[10px] text-white/60 uppercase tracking-wider block">Nomor KTA</span>
-                  <span className="text-xs font-mono font-semibold text-white tracking-wider">{person?.ktaNumber}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-white/60 uppercase tracking-wider block">Wilayah Ranting</span>
-                  <span className="text-xs font-medium text-white/90">{person?.city}</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-6 pt-4 border-t border-white/15 flex items-center justify-between text-[11px] text-white/70">
-              <div className="flex items-center gap-1.5">
-                <QrCode className="w-4 h-4 text-white" />
-                <span>QR Verifikasi Digital Tersemat</span>
-              </div>
-              <span className="font-mono text-[10px]">Tgl Gabung: {person?.joinedDate}</span>
-            </div>
+            {person && <KtaCard person={person} layout="flip" />}
           </div>
 
           {/* Quick Actions & My Aspirations */}
