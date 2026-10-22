@@ -1,0 +1,6 @@
+{
+  "name": "PERINDO ONE — Organization Management Platform",
+  "description": "Internal organization administration prototype with synthetic simulation data, role-based workspaces, and governance management.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
