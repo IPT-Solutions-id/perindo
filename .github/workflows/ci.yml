@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - master
       - staging
       - develop
       - 'feature/**'
@@ -12,6 +13,7 @@ on:
   pull_request:
     branches:
       - main
+      - master
       - staging
       - develop
 
@@ -29,20 +31,19 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js 20 LTS
+      - name: Setup Node.js 22 LTS
         uses: actions/setup-node@v4
         with:
-          node-version: 20
-          cache: 'npm'
+          node-version: 22
 
       - name: Install Dependencies
-        run: npm install --no-audit --no-fund
+        run: npm install --legacy-peer-deps --no-audit --no-fund
 
       - name: Verify TypeScript Types (npm run lint)
         run: npm run lint
 
       - name: Verify Vercel Configuration (vercel.json)
-        run: node -e "JSON.parse(require('fs').readFileSync('./vercel.json', 'utf8')); console.log('vercel.json valid');"
+        run: node --input-type=module -e "import fs from 'node:fs'; JSON.parse(fs.readFileSync('./vercel.json', 'utf8')); console.log('vercel.json valid');"
 
       - name: Build Production Bundle (npm run build)
         run: npm run build

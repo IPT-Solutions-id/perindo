@@ -8,11 +8,14 @@ import {
   X,
   CheckCircle2,
   Camera,
+  FileText,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
 import { Person } from '../../types';
 import { KtaCard } from '../../components/common/KtaCard';
+import { downloadKtaAsPng, downloadKtaAsPdf, formatKtaFilename } from '../../utils/ktaDownload';
 
 export const MembersPage: React.FC = () => {
   const { members, addMember } = useData();
@@ -262,20 +265,42 @@ export const MembersPage: React.FC = () => {
                         {m.phone}
                       </td>
                       <td className="py-3.5 px-4 text-right">
-                        <button
-                          onClick={() => {
-                            setSelectedMemberForKta(m);
-                            window.scrollTo({ top: 0, behavior: 'smooth' });
-                          }}
-                          className={`inline-flex items-center gap-1 text-[11px] font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer ${
-                            isSelected
-                              ? 'bg-sky-600 text-white shadow-2xs'
-                              : 'text-sky-700 hover:text-sky-900 bg-sky-50 hover:bg-sky-100 border border-sky-200/80'
-                          }`}
-                        >
-                          <CreditCard className="w-3.5 h-3.5" />
-                          <span>{isSelected ? 'Sedang Ditampilkan' : 'Lihat KTA'}</span>
-                        </button>
+                        <div className="inline-flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => {
+                              setSelectedMemberForKta(m);
+                              window.scrollTo({ top: 0, behavior: 'smooth' });
+                            }}
+                            className={`inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer ${
+                              isSelected
+                                ? 'bg-sky-600 text-white shadow-2xs'
+                                : 'text-sky-700 hover:text-sky-900 bg-sky-50 hover:bg-sky-100 border border-sky-200/80'
+                            }`}
+                          >
+                            <CreditCard className="w-3.5 h-3.5" />
+                            <span>{isSelected ? 'Ditampilkan' : 'Lihat KTA'}</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => downloadKtaAsPng(m)}
+                            title={`Unduh PNG: ${formatKtaFilename(m, 'png')}`}
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-[#102C63] hover:bg-blue-800 text-white transition-colors shadow-2xs cursor-pointer"
+                          >
+                            <ImageIcon className="w-3 h-3 text-sky-300" />
+                            <span>PNG</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => downloadKtaAsPdf(m)}
+                            title={`Unduh PDF: ${formatKtaFilename(m, 'pdf')}`}
+                            className="inline-flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1.5 rounded-lg bg-[#D7283F] hover:bg-red-700 text-white transition-colors shadow-2xs cursor-pointer"
+                          >
+                            <FileText className="w-3 h-3 text-rose-100" />
+                            <span>PDF</span>
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   );

@@ -1,8 +1,15 @@
 import React, { useState, useRef, useMemo } from 'react';
-import { RotateCw, Download, Check, Camera } from 'lucide-react';
+import { RotateCw, Download, Check, Camera, FileText, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Person } from '../../types';
 import { useData } from '../../context/DataContext';
+import {
+  generateQrMatrix,
+  getNormalizedKtaData,
+  downloadKtaAsPng,
+  downloadKtaAsPdf,
+  formatKtaFilename,
+} from '../../utils/ktaDownload';
 
 interface KtaCardProps {
   person: Person;
@@ -85,53 +92,6 @@ const TiltCardWrapper: React.FC<TiltCardWrapperProps> = ({
   );
 };
 
-// Deterministic 17x17 QR Matrix Generator from KTA ID string (Matches Reference B&W QR)
-const generateQrMatrix = (seedString: string): boolean[][] => {
-  const size = 17;
-  const grid: boolean[][] = Array.from({ length: size }, () => Array(size).fill(false));
-  const reserved: boolean[][] = Array.from({ length: size }, () => Array(size).fill(false));
-
-  const placeFinder = (rowOffset: number, colOffset: number) => {
-    for (let r = -1; r <= 7; r++) {
-      for (let c = -1; c <= 7; c++) {
-        const rr = rowOffset + r;
-        const cc = colOffset + c;
-        if (rr >= 0 && rr < size && cc >= 0 && cc < size) {
-          reserved[rr][cc] = true;
-          if (r >= 0 && r <= 6 && c >= 0 && c <= 6) {
-            const isBorder = r === 0 || r === 6 || c === 0 || c === 6;
-            const isInner = r >= 2 && r <= 4 && c >= 2 && c <= 4;
-            grid[rr][cc] = isBorder || isInner;
-          }
-        }
-      }
-    }
-  };
-
-  placeFinder(0, 0);
-  placeFinder(0, size - 7);
-  placeFinder(size - 7, 0);
-
-  // Hash seed
-  let hash = 2166136261;
-  for (let i = 0; i < seedString.length; i++) {
-    hash ^= seedString.charCodeAt(i);
-    hash = Math.imul(hash, 16777619);
-  }
-
-  for (let r = 0; r < size; r++) {
-    for (let c = 0; c < size; c++) {
-      if (!reserved[r][c]) {
-        hash ^= (r * 31 + c * 17) & 0xff;
-        hash = Math.imul(hash, 16777619);
-        grid[r][c] = (Math.abs(hash) % 10) < 5;
-      }
-    }
-  }
-
-  return grid;
-};
-
 export const KtaCard: React.FC<KtaCardProps> = ({
   person,
   layout = 'side-by-side',
@@ -147,35 +107,19 @@ export const KtaCard: React.FC<KtaCardProps> = ({
 
   const [isFlipped, setIsFlipped] = useState(false);
   const [viewMode, setViewMode] = useState<'flip' | 'side-by-side'>(layout);
-  const [downloadSuccess, setDownloadSuccess] = useState(false);
+  const [downloadingFormat, setDownloadingFormat] = useState<'png' | 'pdf' | null>(null);
+  const [lastDownloadedFile, setLastDownloadedFile] = useState<string | null>(null);
 
   // Dynamic KTA Fields matching the Reference Card Format
-  const ktaId16 =
-    activePerson.ktaId16 ||
-    activePerson.nikDummy?.replace(/\*/g, '1') ||
-    '3202018710310001';
-
-  const birthPlaceDate =
-    activePerson.birthPlaceDate ||
-    `${activePerson.city.replace(/^(KOTA|KABUPATEN)\s+/i, '')}/31-10-1987`;
-
-  const addressLine1 =
-    activePerson.addressLine1 || 'Kp.sirnagalih RT. 04 RW. 29,';
-
-  const addressLine2 =
-    activePerson.addressLine2 || 'Pelabuhanratu, Pelabuhanratu,';
-
-  const cityFormatted = activePerson.city.toUpperCase().startsWith('KOTA') ||
-    activePerson.city.toUpperCase().startsWith('KABUPATEN')
-    ? activePerson.city.toUpperCase()
-    : `KOTA ${activePerson.city.toUpperCase()}`;
-
-  const cityProvinceLine = `${cityFormatted}, ${activePerson.province}`;
-  const phoneFormatted = activePerson.phone.startsWith('+62')
-    ? activePerson.phone
-    : `+62${activePerson.phone.replace(/^0/, '').replace(/-/g, '')}`;
-
-  const photoSrc = activePerson.photoUrl || '/assets/kta/member_photo.png';
+  const {
+    ktaId16,
+    birthPlaceDate,
+    addressLine1,
+    addressLine2,
+    cityProvinceLine,
+    phoneFormatted,
+    photoSrc,
+  } = useMemo(() => getNormalizedKtaData(activePerson), [activePerson]);
 
   const qrMatrix = useMemo(
     () => generateQrMatrix(`${ktaId16}-${activePerson.name}`),
@@ -194,9 +138,19 @@ export const KtaCard: React.FC<KtaCardProps> = ({
     reader.readAsDataURL(file);
   };
 
-  const handleDownload = () => {
-    setDownloadSuccess(true);
-    setTimeout(() => setDownloadSuccess(false), 2500);
+  const handleDownloadFormat = async (format: 'png' | 'pdf') => {
+    if (downloadingFormat) return;
+    setDownloadingFormat(format);
+    try {
+      const filename =
+        format === 'png'
+          ? await downloadKtaAsPng(activePerson)
+          : await downloadKtaAsPdf(activePerson);
+      setLastDownloadedFile(filename);
+      setTimeout(() => setLastDownloadedFile(null), 4000);
+    } finally {
+      setDownloadingFormat(null);
+    }
   };
 
   // SISI DEPAN (100% Matching Reference Layout & Proportions)
@@ -360,7 +314,7 @@ export const KtaCard: React.FC<KtaCardProps> = ({
             </button>
           </div>
 
-          {/* Action Buttons: Upload Photo + Flip + Print */}
+          {/* Action Buttons: Upload Photo + Flip + Download PNG / PDF */}
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
@@ -385,22 +339,48 @@ export const KtaCard: React.FC<KtaCardProps> = ({
 
             <button
               type="button"
-              onClick={handleDownload}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#102C63] hover:bg-[#D7283F] text-white rounded-lg font-semibold transition-colors shadow-2xs cursor-pointer"
+              disabled={downloadingFormat !== null}
+              onClick={() => handleDownloadFormat('png')}
+              title={`Unduh PNG: ${formatKtaFilename(activePerson, 'png')}`}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#102C63] hover:bg-blue-800 disabled:opacity-60 text-white rounded-lg font-semibold transition-colors shadow-2xs cursor-pointer"
             >
-              {downloadSuccess ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-emerald-300" />
-                  <span>Siap Cetak</span>
-                </>
+              {downloadingFormat === 'png' ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                <>
-                  <Download className="w-3.5 h-3.5" />
-                  <span>Cetak / Unduh KTA</span>
-                </>
+                <ImageIcon className="w-3.5 h-3.5 text-sky-300" />
               )}
+              <span>Unduh PNG</span>
+            </button>
+
+            <button
+              type="button"
+              disabled={downloadingFormat !== null}
+              onClick={() => handleDownloadFormat('pdf')}
+              title={`Unduh PDF: ${formatKtaFilename(activePerson, 'pdf')}`}
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#D7283F] hover:bg-red-700 disabled:opacity-60 text-white rounded-lg font-semibold transition-colors shadow-2xs cursor-pointer"
+            >
+              {downloadingFormat === 'pdf' ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <FileText className="w-3.5 h-3.5 text-rose-100" />
+              )}
+              <span>Unduh PDF</span>
             </button>
           </div>
+        </div>
+      )}
+
+      {/* Downloaded Filename Notification Banner */}
+      {lastDownloadedFile && (
+        <div className="flex items-center justify-between gap-2 px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs">
+          <div className="flex items-center gap-2">
+            <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span>
+              KTA berhasil diunduh dengan format nama_nomor kta:{' '}
+              <strong className="font-mono">{lastDownloadedFile}</strong>
+            </span>
+          </div>
+          <Download className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
         </div>
       )}
 
