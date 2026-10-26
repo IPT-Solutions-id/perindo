@@ -59,7 +59,7 @@ export const WorkspaceSelectPage: React.FC<WorkspaceSelectPageProps> = ({
                 key={ws.id}
                 className={`bg-white rounded-2xl border p-5 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
                   isCurrent
-                    ? 'border-blue-500 ring-2 ring-blue-400/30 shadow-xs'
+                    ? 'border-[#102C63] border-l-4 border-l-[#D7283F] ring-2 ring-[#102C63]/10 shadow-xs'
                     : 'border-slate-200 hover:border-slate-300'
                 }`}
               >
@@ -72,8 +72,8 @@ export const WorkspaceSelectPage: React.FC<WorkspaceSelectPageProps> = ({
                       </span>
                     )}
                   </div>
-                  <div className="text-xs text-blue-700 font-semibold flex items-center gap-1.5">
-                    <Shield className="w-3.5 h-3.5" />
+                  <div className="text-xs text-[#1667C7] font-semibold flex items-center gap-1.5">
+                    <Shield className="w-3.5 h-3.5 text-[#D7283F]" />
                     <span>{ws.roleTitle}</span>
                     <span className="text-slate-300">·</span>
                     <span className="font-mono text-slate-500 font-normal">{ws.role}</span>
@@ -91,8 +91,8 @@ export const WorkspaceSelectPage: React.FC<WorkspaceSelectPageProps> = ({
                     onClick={() => handleSelect(ws.id)}
                     className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors ${
                       isCurrent
-                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                        : 'bg-slate-900 hover:bg-slate-800 text-white'
+                        ? 'bg-[#102C63] hover:bg-[#D7283F] text-white shadow-xs'
+                        : 'bg-slate-100 hover:bg-[#102C63] hover:text-white text-slate-700'
                     }`}
                   >
                     <span>{isCurrent ? 'Lanjutkan' : 'Beralih ke Sini'}</span>

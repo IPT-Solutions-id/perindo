@@ -1,12 +1,14 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Account, Person, Workspace, UserRole } from '../types';
-import { MOCK_ACCOUNTS, MOCK_PERSONS } from '../data/mockData';
+import { MOCK_ACCOUNTS, MOCK_PERSONS, MOCK_UNITS } from '../data/mockData';
 
 interface AuthContextType {
   account: Account | null;
   person: Person | null;
   workspace: Workspace | null;
   allAccounts: Account[];
+  isNationalRole: boolean;
+  getManagedUnitIds: () => string[];
   loginAs: (accountId: string, workspaceId?: string) => void;
   switchWorkspace: (workspaceId: string) => void;
   logout: () => void;
@@ -17,16 +19,32 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const STORAGE_KEY_ACC = 'perindo_demo_account_id';
-const STORAGE_KEY_WS = 'perindo_demo_workspace_id';
+const STORAGE_KEY_ACC = 'perindo_demo_account_id_v2';
+const STORAGE_KEY_WS = 'perindo_demo_workspace_id_v2';
+
+// Helper to recursively collect a unit ID and all of its subordinate children in the territorial tree
+const collectSubordinateUnitIds = (rootUnitId: string): string[] => {
+  const result = new Set<string>([rootUnitId]);
+  let added = true;
+  while (added) {
+    added = false;
+    for (const u of MOCK_UNITS) {
+      if (u.parentId && result.has(u.parentId) && !result.has(u.id)) {
+        result.add(u.id);
+        added = true;
+      }
+    }
+  }
+  return Array.from(result);
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Default demo user: Ahmad Fauzi (DPC Menteng)
+  // Default user: Ketua Umum (Full National Access across all tiers)
   const [accountId, setAccountId] = useState<string>(() => {
-    return localStorage.getItem(STORAGE_KEY_ACC) || 'ACC-001';
+    return localStorage.getItem(STORAGE_KEY_ACC) || 'ACC-KETUM';
   });
 
-  const account = MOCK_ACCOUNTS.find((a) => a.id === accountId) || null;
+  const account = MOCK_ACCOUNTS.find((a) => a.id === accountId) || MOCK_ACCOUNTS[0];
   const person = account ? MOCK_PERSONS.find((p) => p.id === account.personId) || null : null;
 
   const [workspaceId, setWorkspaceId] = useState<string>(() => {
@@ -37,7 +55,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return account ? account.workspaces[0]?.id || '' : '';
   });
 
-  const workspace = account ? account.workspaces.find((w) => w.id === workspaceId) || account.workspaces[0] || null : null;
+  const workspace = account
+    ? account.workspaces.find((w) => w.id === workspaceId) || account.workspaces[0] || null
+    : null;
 
   useEffect(() => {
     if (accountId) {
@@ -85,99 +105,67 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return roles.includes(workspace.role);
   };
 
-  // Route permission evaluator
-  const canAccessRoute = (pathname: string): { allowed: boolean; reason?: string } => {
-    if (!workspace) {
-      return { allowed: false, reason: 'Sesi belum terautentikasi. Silakan masuk akun demo.' };
+  const isNationalRole = Boolean(
+    workspace &&
+      ['KETUA_UMUM', 'DPP_ADMIN', 'EXECUTIVE', 'TECH_OPERATOR'].includes(workspace.role)
+  );
+
+  const getManagedUnitIds = (): string[] => {
+    if (!workspace) return [];
+    if (isNationalRole) {
+      return MOCK_UNITS.map((u) => u.id);
     }
+    return collectSubordinateUnitIds(workspace.unitId);
+  };
 
-    const role = workspace.role;
-
-    if (pathname.startsWith('/app/executive')) {
-      if (role === 'EXECUTIVE' || role === 'DPP_ADMIN') {
-        return { allowed: true };
-      }
-      return {
-        allowed: false,
-        reason: 'Modul Executive Command Center hanya dapat diakses oleh pimpinan tingkat Dewan Pimpinan Pusat (DPP) atau Administrator Nasional.',
-      };
+  // Route permission evaluator - All menus active with role-aware context
+  const canAccessRoute = (_pathname: string): { allowed: boolean; reason?: string } => {
+    if (!account) {
+      return { allowed: false, reason: 'Sesi belum terautentikasi. Silakan masuk ke akun Anda.' };
     }
-
-    if (pathname.startsWith('/app/admin/health')) {
-      if (role === 'TECH_OPERATOR' || role === 'DPP_ADMIN') {
-        return { allowed: true };
-      }
-      return {
-        allowed: false,
-        reason: 'Modul Diagnostik Sistem & Audit Log hanya terbuka bagi peran Technical Operator dan DPP Admin demi integritas sistem.',
-      };
-    }
-
-    if (pathname.startsWith('/app/candidates')) {
-      if (['CANDIDATE_EVALUATOR', 'DPD_MANAGER', 'DPW_MANAGER', 'DPP_ADMIN', 'EXECUTIVE'].includes(role)) {
-        return { allowed: true };
-      }
-      return {
-        allowed: false,
-        reason: 'Penilaian rubrik seleksi bakal calon dibatasi untuk Evaluator Resmi dan Pimpinan Pengambil Kebijakan Wilayah.',
-      };
-    }
-
-    if (pathname.startsWith('/app/elections')) {
-      if (['TPS_WITNESS', 'TPS_VERIFIER', 'DPC_MANAGER', 'DPD_MANAGER', 'DPW_MANAGER', 'DPP_ADMIN', 'EXECUTIVE'].includes(role)) {
-        return { allowed: true };
-      }
-      return {
-        allowed: false,
-        reason: 'Sistem Pelaporan TPS hanya dibuka untuk Saksi Mandat, Tim Verifikator, serta Struktur Pengurus Wilayah terkait.',
-      };
-    }
-
-    if (pathname.startsWith('/app/members')) {
-      // Tech Operator and Executive shouldn't access raw member PII
-      if (role === 'TECH_OPERATOR') {
-        return {
-          allowed: false,
-          reason: 'Prinsip Privacy by Design: Technical Operator dilarang mengakses data identitas perseorangan (PII) kader.',
-        };
-      }
-      return { allowed: true };
-    }
-
-    // Default routes (/app/overview, /app/organizations, /app/programs, /app/activities, /app/services, /app/approvals, /app/profile)
     return { allowed: true };
   };
 
-  // Check whether active workspace unit has permission to inspect another unit (e.g. cross-region isolation)
+  // Tiered Territorial Unit Access Evaluator
   const checkUnitAccess = (targetUnitId: string): { allowed: boolean; reason?: string } => {
-    if (!workspace) return { allowed: false, reason: 'Tidak terotentikasi.' };
+    if (!workspace) {
+      return { allowed: false, reason: 'Tidak ada ruang kerja aktif.' };
+    }
 
-    const role = workspace.role;
-    // DPP and Executive have national scope
-    if (['DPP_ADMIN', 'EXECUTIVE', 'TECH_OPERATOR'].includes(role)) {
+    // Ketua Umum & DPP have unrestricted national authority across all party levels, wings, and institutions
+    if (isNationalRole) {
       return { allowed: true };
     }
 
-    // Autonomous Sayap and Institution have their own tree
-    if (role === 'WING_MANAGER' || role === 'INSTITUTION_MANAGER') {
-      if (targetUnitId === workspace.unitId) return { allowed: true };
+    const targetUnit = MOCK_UNITS.find((u) => u.id === targetUnitId);
+    if (!targetUnit) {
+      return { allowed: false, reason: 'Unit organisasi tidak ditemukan.' };
+    }
+
+    // Wing & Institution autonomy check
+    if (workspace.role === 'WING_MANAGER' && targetUnit.type !== 'WING') {
       return {
         allowed: false,
-        reason: 'Otonomi Struktur: Akses dibatasi pada hierarki internal Sayap/Badan Anda, bukan struktur partai induk.',
+        reason: `Pengurus Sayap Otonom (${workspace.unitName}) memiliki pohon struktur mandiri dan tidak berwenang mengelola struktur partai induk (${targetUnit.name}).`,
       };
     }
 
-    // DPC Menteng (DKI Jakarta) trying to read Jawa Barat (Bandung)
-    if (targetUnitId.includes('JABAR') || targetUnitId.includes('BANDUNG')) {
-      if (workspace.unitId.includes('MENTENG') || workspace.unitId.includes('JAKPUS') || workspace.unitId.includes('DKI')) {
-        return {
-          allowed: false,
-          reason: 'Akses Wilayah Ditolak (Cross-Region Boundary Enforced). Struktur DPC Menteng (DKI Jakarta) tidak berwenang memeriksa unit administratif di wilayah Jawa Barat.',
-        };
-      }
+    if (workspace.role === 'INSTITUTION_MANAGER' && targetUnit.type !== 'INSTITUTION') {
+      return {
+        allowed: false,
+        reason: `Badan Fungsional (${workspace.unitName}) hanya mengelola unit advokasi/fungsional, bukan struktur teritorial (${targetUnit.name}).`,
+      };
     }
 
-    return { allowed: true };
+    const managedIds = getManagedUnitIds();
+    if (managedIds.includes(targetUnitId)) {
+      return { allowed: true };
+    }
+
+    return {
+      allowed: false,
+      reason: `Wewenang berjenjang Anda pada ${workspace.unitName} (${workspace.regionScopeLabel}) hanya mencakup unit di bawah pohon teritorial Anda. Unit "${targetUnit.name}" (${targetUnit.regionScope.province}) berada di luar yurisdiksi SK Anda.`,
+    };
   };
 
   return (
@@ -187,6 +175,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         person,
         workspace,
         allAccounts: MOCK_ACCOUNTS,
+        isNationalRole,
+        getManagedUnitIds,
         loginAs,
         switchWorkspace,
         logout,

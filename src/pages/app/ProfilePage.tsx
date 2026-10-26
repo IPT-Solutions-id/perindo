@@ -29,21 +29,21 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
-      {/* Page Header */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Page Header in Fresh Light Blue */}
+      <div className="bg-gradient-to-r from-sky-50 via-blue-50/70 to-white rounded-2xl border border-sky-200 p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
-            Akun & Keanggotaan
+          <div className="text-xs font-semibold text-sky-700 uppercase tracking-wider">
+            Akun & Keanggotaan ({workspace?.level} — {workspace?.unitName})
           </div>
           <h1 className="text-2xl font-bold text-slate-900 mt-1">Profil Pengguna & KTA Digital</h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-600 mt-1">
             Data identitas kader, riwayat penugasan surat keputusan (SK), dan kartu identitas digital.
           </p>
         </div>
 
         <button
           onClick={handleCopy}
-          className="inline-flex items-center gap-1.5 px-4 py-2 border border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl text-xs font-semibold transition-colors"
+          className="inline-flex items-center gap-1.5 px-4 py-2 border border-sky-200 bg-white hover:bg-sky-50 text-sky-800 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
         >
           {copiedKta ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
           <span>{copiedKta ? 'Tersalin ke Clipboard' : 'Salin Nomor KTA'}</span>
@@ -51,15 +51,15 @@ export const ProfilePage: React.FC = () => {
       </div>
 
       {/* Two-Sided Digital KTA Component */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+      <div className="bg-white rounded-2xl border border-sky-200 p-6 shadow-2xs space-y-4">
+        <div className="flex items-center justify-between border-b border-sky-100 pb-3">
           <div className="flex items-center gap-2">
-            <CreditCard className="w-5 h-5 text-blue-700" />
+            <CreditCard className="w-5 h-5 text-sky-600" />
             <h2 className="font-bold text-base text-slate-900">
               Kartu Tanda Anggota (KTA) Digital Resmi
             </h2>
           </div>
-          <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
+          <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full">
             KTA AKTIF
           </span>
         </div>
@@ -81,7 +81,7 @@ export const ProfilePage: React.FC = () => {
                 <span className="font-semibold text-slate-900 text-sm mt-0.5 block">{person?.name}</span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px] uppercase font-semibold">ID Akun Simulasi</span>
+                <span className="text-slate-400 block text-[10px] uppercase font-semibold">ID Anggota / Akun</span>
                 <span className="font-mono text-slate-800 font-semibold mt-0.5 block">{person?.id}</span>
               </div>
               <div>
@@ -93,9 +93,10 @@ export const ProfilePage: React.FC = () => {
                 <span className="text-slate-800 font-mono mt-0.5 block">{person?.phone}</span>
               </div>
               <div>
-                <span className="text-slate-400 block text-[10px] uppercase font-semibold">NIK (Tersamar)</span>
+                <span className="text-slate-400 block text-[10px] uppercase font-semibold">Nomor Induk Kependudukan (NIK)</span>
                 <span className="text-slate-800 font-mono mt-0.5 block">{person?.nikDummy}</span>
               </div>
+
               <div>
                 <span className="text-slate-400 block text-[10px] uppercase font-semibold">Provinsi</span>
                 <span className="text-slate-800 font-semibold mt-0.5 block">{person?.province}</span>

@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Users,
   ShieldCheck,
@@ -11,7 +10,9 @@ import {
   Lock,
   Layers,
   ChevronRight,
+  Sparkles,
 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../../context/AuthContext';
 
 interface LandingPageProps {
@@ -25,91 +26,110 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenInsp
   return (
     <div className="bg-[#F5F7FB] min-h-screen">
       {/* Hero Section */}
-      <section className="relative overflow-hidden pt-12 pb-20 border-b border-slate-200 bg-white">
+      <section className="relative overflow-hidden pt-12 pb-20 border-b border-slate-200 bg-gradient-to-b from-white via-white to-slate-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left Column: Headline & Value Proposition */}
-            <div className="lg:col-span-7 space-y-6">
-              <div className="inline-flex items-center gap-2 text-xs font-semibold text-blue-800 bg-blue-50 border border-blue-200/60 px-3 py-1.5 rounded-full">
-                <span className="w-2 h-2 rounded-full bg-blue-600"></span>
-                <span>Platform Tata Kelola Terpadu Struktur & Kader Partai</span>
+            <motion.div
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+              className="lg:col-span-7 space-y-6"
+            >
+              <div className="inline-flex items-center gap-2.5 text-xs font-semibold text-[#102C63] bg-blue-50/90 border border-[#1667C7]/20 px-3.5 py-1.5 rounded-full shadow-2xs hover:shadow-xs transition-shadow">
+                <img src="/assets/logo_symbol.png" alt="Emblem Perindo" className="w-5 h-auto object-contain" />
+                <span className="font-bold text-[#102C63]">PARTAI PERSATUAN INDONESIA</span>
+                <span className="text-slate-300">|</span>
+                <span className="text-slate-600 font-medium">Portal Tata Kelola Terpadu</span>
               </div>
 
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-slate-900 tracking-tight leading-[1.15]">
-                Satu Sistem untuk Seluruh Jenjang Organisasi Perindo
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-[#102C63] tracking-tight leading-[1.15]">
+                Satu Sistem Terpadu untuk Seluruh Jenjang Organisasi <span className="text-[#D7283F]">Perindo</span>
               </h1>
 
               <p className="text-base sm:text-lg text-slate-600 max-w-2xl leading-relaxed">
-                Kelola hierarki kepengurusan mulai dari DPP hingga DPRt, eksekusi program ekonomi kerakyatan,
-                terbitkan KTA digital kader, dan pantau kesiapan saksi TPS secara terkoordinasi dalam satu platform aman.
+                Kelola hierarki kepengurusan mulai dari DPP hingga DPRt, eksekusi program ekonomi kerakyatan & UMKM,
+                terbitkan KTA digital kader resmi, dan pantau kesiapan saksi TPS secara terkoordinasi dalam satu platform aman.
               </p>
 
               {/* Action Buttons */}
               <div className="flex flex-wrap items-center gap-3 pt-2">
                 {account ? (
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.02, y: -1 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => onNavigate('/app/overview')}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#102C63] hover:bg-[#0b1f47] text-white rounded-xl text-sm font-semibold shadow-sm transition-all"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#102C63] hover:bg-[#D7283F] text-white rounded-xl text-sm font-semibold shadow-md shadow-[#102C63]/15 transition-colors cursor-pointer"
                   >
                     <span>Masuk ke Dashboard ({account.workspaces[0]?.roleTitle})</span>
                     <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </motion.button>
                 ) : (
-                  <button
+                  <motion.button
+                    whileHover={{ scale: 1.02, y: -1 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => onNavigate('/login')}
-                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#102C63] hover:bg-[#0b1f47] text-white rounded-xl text-sm font-semibold shadow-sm transition-all"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-[#102C63] hover:bg-[#D7283F] text-white rounded-xl text-sm font-semibold shadow-md shadow-[#102C63]/15 transition-colors cursor-pointer"
                   >
-                    <span>Coba Prototipe Sekarang</span>
+                    <span>Masuk ke Portal Resmi</span>
                     <ArrowRight className="w-4 h-4" />
-                  </button>
+                  </motion.button>
                 )}
 
-                <button
-                  onClick={onOpenInspector}
-                  className="inline-flex items-center gap-2 px-5 py-3 bg-white hover:bg-slate-50 text-slate-700 rounded-xl text-sm font-semibold border border-slate-300 shadow-2xs transition-all"
+                <motion.button
+                  whileHover={{ scale: 1.02, y: -1 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => onNavigate('/fitur')}
+                  className="inline-flex items-center gap-2 px-5 py-3 bg-white hover:bg-slate-50 text-[#102C63] rounded-xl text-sm font-semibold border border-slate-300 shadow-2xs transition-all hover:border-[#102C63] cursor-pointer"
                 >
-                  <ShieldCheck className="w-4 h-4 text-blue-600" />
-                  <span>Uji Peran & Akses Wilayah</span>
-                </button>
+                  <ShieldCheck className="w-4 h-4 text-[#1667C7]" />
+                  <span>Pelajari Fitur Sistem</span>
+                </motion.button>
               </div>
 
               {/* Bullet Highlights */}
               <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-slate-600 border-t border-slate-100">
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-[#1667C7] shrink-0" />
                   <span>Hierarki DPP, DPW, DPD, DPC, DPRt</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-[#1667C7] shrink-0" />
                   <span>Isolasi Wilayah Ketat (Cross-Region Protection)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <CheckCircle2 className="w-4 h-4 text-[#1667C7] shrink-0" />
                   <span>Dukungan Sayap Otonom & Badan Advokasi</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Simulasi Saksi TPS & Form C1 Plano</span>
+                  <CheckCircle2 className="w-4 h-4 text-[#1667C7] shrink-0" />
+                  <span>Manajemen Saksi TPS & Form C1 Plano</span>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
-            {/* Right Column: Interactive Quick Persona Switcher Preview Card */}
-            <div className="lg:col-span-5">
-              <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-xl border border-slate-800 space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+            {/* Right Column: Interactive Quick Access Portal Card */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5, delay: 0.15, ease: 'easeOut' }}
+              className="lg:col-span-5"
+            >
+              <div className="bg-[#0e1f42] text-white rounded-2xl p-6 shadow-2xl border border-[#1a3875] border-t-4 border-t-[#D7283F] space-y-4">
+                <div className="flex items-center justify-between border-b border-white/10 pb-3">
                   <div className="flex items-center gap-2">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                    <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
-                      Uji Peran Langsung (Quick Demo)
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-200">
+                      Akses Cepat Pengurus & Kader
                     </span>
                   </div>
-                  <span className="text-[10px] text-slate-400 font-mono">SIMULASI AKTIF</span>
+                  <span className="text-[10px] text-emerald-300 font-mono font-bold bg-emerald-500/20 px-2 py-0.5 rounded border border-emerald-400/30">PORTAL AKTIF</span>
                 </div>
 
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Pilih salah satu dari figur pengurus untuk langsung menguji antarmuka dan batasan hak akses sesuai SK:
+                  Pilih salah satu figur pengurus untuk langsung mengakses ruang kerja operasional sesuai surat keputusan (SK):
                 </p>
+
 
                 <div className="space-y-2.5">
                   {[
@@ -142,39 +162,42 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenInsp
                       desc: 'Agregat metrik nasional tanpa data PII',
                     },
                   ].map((persona) => (
-                    <button
+                    <motion.button
                       key={persona.accId}
+                      whileHover={{ scale: 1.015, x: 2 }}
+                      whileTap={{ scale: 0.985 }}
                       onClick={() => {
                         loginAs(persona.accId);
                         onNavigate('/app/overview');
                       }}
-                      className="w-full text-left p-3 rounded-xl bg-slate-800/80 hover:bg-slate-700/90 border border-slate-700 hover:border-blue-400 transition-all flex items-center justify-between group"
+                      className="w-full text-left p-3 rounded-xl bg-[#142854] hover:bg-[#1b356e] border border-white/10 hover:border-[#D7283F] transition-all flex items-center justify-between group cursor-pointer"
                     >
                       <div>
-                        <div className="text-xs font-bold text-white group-hover:text-blue-300 transition-colors">
+                        <div className="text-xs font-bold text-white group-hover:text-sky-300 transition-colors">
                           {persona.name}
                         </div>
-                        <div className="text-[11px] text-blue-400 font-medium">
+                        <div className="text-[11px] text-sky-300 font-medium">
                           {persona.roleLabel}
                         </div>
                         <div className="text-[10px] text-slate-400">{persona.desc}</div>
                       </div>
-                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-white transition-colors shrink-0 ml-2" />
-                    </button>
+                      <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#D7283F] transition-colors shrink-0 ml-2" />
+                    </motion.button>
                   ))}
                 </div>
 
-                <div className="pt-2 text-[11px] text-slate-400 flex items-center justify-between">
+                <div className="pt-2 text-[11px] text-slate-400 flex items-center justify-between border-t border-white/10">
                   <span>Atau gunakan form masuk demo:</span>
                   <button
                     onClick={() => onNavigate('/login')}
-                    className="text-sky-400 hover:underline font-medium"
+                    className="text-sky-300 hover:text-white hover:underline font-semibold cursor-pointer"
                   >
                     Buka Halaman Login &rarr;
                   </button>
                 </div>
               </div>
-            </div>
+            </motion.div>
+
           </div>
         </div>
       </section>
@@ -307,34 +330,34 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onNavigate, onOpenInsp
       </section>
 
       {/* Privacy and Boundaries Callout */}
-      <section className="bg-slate-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="bg-[#102C63] text-white py-12 relative overflow-hidden border-t-4 border-[#D7283F]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-2 max-w-2xl">
-              <div className="inline-flex items-center gap-1.5 text-xs text-rose-400 font-bold uppercase tracking-wider">
-                <Lock className="w-3.5 h-3.5" />
+              <div className="inline-flex items-center gap-1.5 text-xs text-rose-300 font-bold uppercase tracking-wider">
+                <Lock className="w-3.5 h-3.5 text-[#D7283F]" />
                 Standar Etika & Kepatuhan Simulasi
               </div>
               <h3 className="text-xl sm:text-2xl font-bold">
                 Batas Penggunaan Data & Netralitas Sistem
               </h3>
-              <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
                 Aplikasi ini tidak memuat data pemilih riil (DPT resmi KPU), tidak melakukan microtargeting pemilih,
                 dan tidak menerbitkan sertifikat persetujuan AD/ART final. Seluruh alur persetujuan ditandai{' '}
-                <span className="text-rose-300 font-mono font-semibold">SIMULASI • MENUNGGU VERIFIKASI DPP</span>.
+                <span className="text-amber-300 font-mono font-semibold">SIMULASI • MENUNGGU VERIFIKASI DPP</span>.
               </p>
             </div>
 
             <div className="shrink-0 flex gap-3">
               <button
                 onClick={() => onNavigate('/privasi')}
-                className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-medium border border-slate-700 transition-colors"
+                className="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-medium border border-white/20 transition-colors"
               >
                 Baca Kebijakan Privasi
               </button>
               <button
                 onClick={() => onNavigate('/login')}
-                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-semibold transition-colors shadow-xs"
+                className="px-5 py-2.5 bg-[#D7283F] hover:bg-[#b81d31] text-white rounded-xl text-xs font-semibold transition-colors shadow-md shadow-[#D7283F]/30"
               >
                 Masuk Demo
               </button>

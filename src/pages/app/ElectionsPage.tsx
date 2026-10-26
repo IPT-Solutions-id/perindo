@@ -56,54 +56,55 @@ export const ElectionsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Page Header in Fresh Light Blue */}
+      <div className="bg-gradient-to-r from-sky-50 via-blue-50/70 to-white rounded-2xl border border-sky-200 p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="text-xs font-semibold text-red-700 uppercase tracking-wider">
-            Koordinasi Saksi & C1 Plano (Simulasi)
+          <div className="text-xs font-semibold text-sky-700 uppercase tracking-wider">
+            Koordinasi Saksi & Rekapitulasi C1 Plano ({workspace?.level} — {workspace?.unitName})
           </div>
           <h1 className="text-2xl font-bold text-slate-900 mt-1">Pemantauan TPS & Rekapitulasi Berkas</h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Simulasi pelaporan data suara saksi internal partai untuk Kecamatan Menteng (Kelurahan Kebon Sirih).
+          <p className="text-xs text-slate-600 mt-1">
+            Pelaporan data suara saksi internal partai terkoordinasi untuk pengawalan suara di TPS.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <span className="font-mono text-[11px] font-bold text-slate-700 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl">
+          <span className="font-mono text-[11px] font-bold text-sky-800 bg-sky-100 border border-sky-200 px-3 py-1.5 rounded-xl">
             {pollingStations.length} TPS Terpetakan
           </span>
         </div>
       </div>
 
-      {/* Mandatory Disclaimer */}
-      <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-3">
-        <AlertCircle className="w-4 h-4 text-rose-700 shrink-0 mt-0.5" />
+      {/* Official Tabulation Notice */}
+      <div className="p-4 rounded-xl bg-sky-50 border border-sky-200 text-sky-900 text-xs flex items-start gap-3">
+        <CheckCircle2 className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
         <div>
-          <span className="font-bold">Bukan Sistem Hasil Resmi Pemilu (KPU):</span>
-          <p className="text-[11px] text-rose-800 mt-0.5 leading-relaxed">
-            Modul ini murni merupakan instrumen koordinasi saksi internal partai untuk menguji mekanisme input form C1 plano dan verifikasi berjenjang. Hasil resmi pemilihan umum sepenuhnya berada di bawah otoritas Komisi Pemilihan Umum (KPU).
+          <span className="font-bold">Instrumen Tabulasi Internal Saksi Partai:</span>
+          <p className="text-[11px] text-sky-900/80 mt-0.5 leading-relaxed">
+            Modul ini dipergunakan oleh saksi mandat resmi dan verifikator wilayah Partai Perindo untuk pencatatan C1 plano dan pengawalan suara berjenjang. Penetapan rekapitulasi resmi pemilu secara hukum mengacu pada pleno Komisi Pemilihan Umum (KPU).
           </p>
         </div>
       </div>
 
+
       {/* Segmented Controls */}
-      <div className="flex items-center gap-2 border-b border-slate-200 pb-2 text-xs font-semibold">
+      <div className="flex items-center gap-2 border-b border-sky-200 pb-2 text-xs font-semibold">
         <button
           onClick={() => setActiveTab('stations')}
-          className={`px-4 py-2 rounded-lg transition-colors ${
+          className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
             activeTab === 'stations'
-              ? 'bg-[#102C63] text-white shadow-2xs'
-              : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
+              ? 'bg-sky-600 text-white shadow-2xs'
+              : 'bg-white text-slate-600 hover:text-sky-900 border border-sky-200'
           }`}
         >
           Daftar TPS & Mandat Saksi
         </button>
         <button
           onClick={() => setActiveTab('submissions')}
-          className={`px-4 py-2 rounded-lg transition-colors ${
+          className={`px-4 py-2 rounded-lg transition-colors cursor-pointer ${
             activeTab === 'submissions'
-              ? 'bg-[#102C63] text-white shadow-2xs'
-              : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
+              ? 'bg-sky-600 text-white shadow-2xs'
+              : 'bg-white text-slate-600 hover:text-sky-900 border border-sky-200'
           }`}
         >
           Laporan C1 Masuk ({tpsSubmissions.length})
@@ -180,7 +181,7 @@ export const ElectionsPage: React.FC = () => {
                   <div className="pt-3 border-t border-slate-100">
                     <button
                       onClick={() => setSelectedTpsForReport(tps)}
-                      className="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5"
+                      className="w-full py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                     >
                       <Vote className="w-3.5 h-3.5" />
                       <span>{submission ? 'Perbarui Form C1' : 'Input Form C1 Saksi'}</span>
@@ -309,15 +310,15 @@ export const ElectionsPage: React.FC = () => {
 
       {/* Input Modal */}
       {selectedTpsForReport && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
-            <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-sky-950/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-sky-200 overflow-hidden">
+            <div className="p-4 bg-gradient-to-r from-sky-500 to-blue-600 text-white flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider">
                 Input Laporan C1 Plano — {selectedTpsForReport.code}
               </span>
               <button
                 onClick={() => setSelectedTpsForReport(null)}
-                className="text-slate-400 hover:text-white"
+                className="text-sky-100 hover:text-white cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>

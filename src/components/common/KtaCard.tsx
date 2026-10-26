@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
-import { RotateCw, Download, Check, QrCode, Shield, Share2 } from 'lucide-react';
+import React, { useState, useRef, useMemo } from 'react';
+import { RotateCw, Download, Check, Camera } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { Person } from '../../types';
+import { useData } from '../../context/DataContext';
 
 interface KtaCardProps {
   person: Person;
@@ -8,294 +10,388 @@ interface KtaCardProps {
   showControls?: boolean;
 }
 
+interface TiltCardWrapperProps {
+  children: React.ReactNode;
+  className?: string;
+  onClick?: () => void;
+  enableTilt?: boolean;
+}
+
+const TiltCardWrapper: React.FC<TiltCardWrapperProps> = ({
+  children,
+  className = '',
+  onClick,
+  enableTilt = true,
+}) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const [rotateX, setRotateX] = useState(0);
+  const [rotateY, setRotateY] = useState(0);
+  const [glarePos, setGlarePos] = useState({ x: 50, y: 50, opacity: 0 });
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!enableTilt || !cardRef.current) return;
+    const rect = cardRef.current.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotX = -((y - centerY) / centerY) * 6;
+    const rotY = ((x - centerX) / centerX) * 6;
+
+    setRotateX(rotX);
+    setRotateY(rotY);
+    setGlarePos({
+      x: (x / rect.width) * 100,
+      y: (y / rect.height) * 100,
+      opacity: 0.25,
+    });
+  };
+
+  const handleMouseLeave = () => {
+    setRotateX(0);
+    setRotateY(0);
+    setGlarePos((prev) => ({ ...prev, opacity: 0 }));
+  };
+
+  return (
+    <div
+      ref={cardRef}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      onClick={onClick}
+      style={{ perspective: '1200px' }}
+      className={`relative select-none ${className}`}
+    >
+      <motion.div
+        animate={{ rotateX, rotateY }}
+        transition={{ type: 'spring', stiffness: 260, damping: 22 }}
+        style={{ transformStyle: 'preserve-3d' }}
+        className="w-full relative rounded-lg overflow-hidden shadow-xl border border-slate-300 bg-white transition-shadow duration-300 hover:shadow-2xl"
+      >
+        {children}
+
+        <div
+          className="absolute inset-0 pointer-events-none transition-opacity duration-300 z-30"
+          style={{
+            opacity: glarePos.opacity,
+            background: `radial-gradient(circle at ${glarePos.x}% ${glarePos.y}%, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0.1) 40%, transparent 70%)`,
+            mixBlendMode: 'overlay',
+          }}
+        />
+      </motion.div>
+    </div>
+  );
+};
+
+// Deterministic 17x17 QR Matrix Generator from KTA ID string (Matches Reference B&W QR)
+const generateQrMatrix = (seedString: string): boolean[][] => {
+  const size = 17;
+  const grid: boolean[][] = Array.from({ length: size }, () => Array(size).fill(false));
+  const reserved: boolean[][] = Array.from({ length: size }, () => Array(size).fill(false));
+
+  const placeFinder = (rowOffset: number, colOffset: number) => {
+    for (let r = -1; r <= 7; r++) {
+      for (let c = -1; c <= 7; c++) {
+        const rr = rowOffset + r;
+        const cc = colOffset + c;
+        if (rr >= 0 && rr < size && cc >= 0 && cc < size) {
+          reserved[rr][cc] = true;
+          if (r >= 0 && r <= 6 && c >= 0 && c <= 6) {
+            const isBorder = r === 0 || r === 6 || c === 0 || c === 6;
+            const isInner = r >= 2 && r <= 4 && c >= 2 && c <= 4;
+            grid[rr][cc] = isBorder || isInner;
+          }
+        }
+      }
+    }
+  };
+
+  placeFinder(0, 0);
+  placeFinder(0, size - 7);
+  placeFinder(size - 7, 0);
+
+  // Hash seed
+  let hash = 2166136261;
+  for (let i = 0; i < seedString.length; i++) {
+    hash ^= seedString.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+
+  for (let r = 0; r < size; r++) {
+    for (let c = 0; c < size; c++) {
+      if (!reserved[r][c]) {
+        hash ^= (r * 31 + c * 17) & 0xff;
+        hash = Math.imul(hash, 16777619);
+        grid[r][c] = (Math.abs(hash) % 10) < 5;
+      }
+    }
+  }
+
+  return grid;
+};
+
 export const KtaCard: React.FC<KtaCardProps> = ({
   person,
-  layout = 'flip',
+  layout = 'side-by-side',
   showControls = true,
 }) => {
+  const { members, updateMember } = useData();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Always pick the freshest member state so photo/data edits reflect immediately
+  const activePerson = useMemo(() => {
+    return members.find((m) => m.id === person.id) || person;
+  }, [members, person]);
+
   const [isFlipped, setIsFlipped] = useState(false);
   const [viewMode, setViewMode] = useState<'flip' | 'side-by-side'>(layout);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
 
-  // Derive realistic Indonesian administrative fields from person data
-  const birthPlaceDate = person.city ? `${person.city}/15-05-1988` : 'Jakarta/15-05-1988';
-  const fullAddress = `Jl. Pegangsaan Barat No. 12, RT. 04 RW. 02, Menteng, ${person.city.toUpperCase()}, ${person.province}`;
-  const phoneFormatted = person.phone || '+6281210338821';
-  const nikNumber = person.nikDummy.replace(/\*/g, '8');
+  // Dynamic KTA Fields matching the Reference Card Format
+  const ktaId16 =
+    activePerson.ktaId16 ||
+    activePerson.nikDummy?.replace(/\*/g, '1') ||
+    '3202018710310001';
+
+  const birthPlaceDate =
+    activePerson.birthPlaceDate ||
+    `${activePerson.city.replace(/^(KOTA|KABUPATEN)\s+/i, '')}/31-10-1987`;
+
+  const addressLine1 =
+    activePerson.addressLine1 || 'Kp.sirnagalih RT. 04 RW. 29,';
+
+  const addressLine2 =
+    activePerson.addressLine2 || 'Pelabuhanratu, Pelabuhanratu,';
+
+  const cityFormatted = activePerson.city.toUpperCase().startsWith('KOTA') ||
+    activePerson.city.toUpperCase().startsWith('KABUPATEN')
+    ? activePerson.city.toUpperCase()
+    : `KOTA ${activePerson.city.toUpperCase()}`;
+
+  const cityProvinceLine = `${cityFormatted}, ${activePerson.province}`;
+  const phoneFormatted = activePerson.phone.startsWith('+62')
+    ? activePerson.phone
+    : `+62${activePerson.phone.replace(/^0/, '').replace(/-/g, '')}`;
+
+  const photoSrc = activePerson.photoUrl || '/assets/kta/member_photo.png';
+
+  const qrMatrix = useMemo(
+    () => generateQrMatrix(`${ktaId16}-${activePerson.name}`),
+    [ktaId16, activePerson.name]
+  );
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        updateMember(activePerson.id, { photoUrl: reader.result });
+      }
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleDownload = () => {
     setDownloadSuccess(true);
     setTimeout(() => setDownloadSuccess(false), 2500);
   };
 
-  // SISI DEPAN (FRONT CARD)
+  // SISI DEPAN (100% Matching Reference Layout & Proportions)
   const renderFrontCard = () => (
-    <div className="w-full max-w-[500px] aspect-[85.6/53.98] bg-white rounded-xl sm:rounded-2xl shadow-xl border border-slate-300 overflow-hidden flex flex-col justify-between relative select-none font-sans text-slate-900">
-      {/* 1. Header Putih dengan Logo Sayap Perindo */}
-      <div className="pt-2 sm:pt-3 pb-1 flex flex-col items-center justify-center bg-white">
+    <div className="w-full max-w-[560px] aspect-[622/363] bg-white overflow-hidden flex flex-col justify-between relative select-none font-sans text-slate-900">
+      {/* Top 49%: Official Eagle Logo on White + Blue-to-Red Gradient KARTU TANDA ANGGOTA PARTAI PERINDO Ribbon */}
+      <div className="w-full h-[49.2%] shrink-0 overflow-hidden bg-white">
         <img
-          src="/assets/kta/perindo_logo.png"
-          alt="Logo Partai Perindo"
-          className="h-7 sm:h-9 object-contain"
-          onError={(e) => {
-            // Fallback SVG if image not found
-            e.currentTarget.style.display = 'none';
-          }}
+          src="/assets/kta/kta_front_header.png"
+          alt="Header KTA Partai Perindo"
+          className="w-full h-full object-fill pointer-events-none"
         />
       </div>
 
-      {/* 2. Banner Pita Gradasi Biru Tua & Merah Marun */}
-      <div className="bg-gradient-to-r from-[#102C63] via-[#102C63] to-[#B21F35] text-white py-1.5 sm:py-2 text-center shadow-inner">
-        <div className="text-[10px] sm:text-[11px] font-semibold tracking-wider uppercase leading-none opacity-95">
-          KARTU TANDA ANGGOTA
-        </div>
-        <div className="text-sm sm:text-base font-black tracking-wide uppercase leading-tight mt-0.5 sm:mt-1">
-          PARTAI PERINDO
-        </div>
-      </div>
-
-      {/* 3. Badan Kartu Putih (Foto + Identitas + QR Code) */}
-      <div className="flex-1 bg-white px-3 sm:px-4 py-2 sm:py-3 flex items-center justify-between gap-2 sm:gap-3 overflow-hidden">
-        {/* Foto Anggota */}
-        <div className="shrink-0">
-          <div className="w-16 h-20 sm:w-20 sm:h-24 rounded-lg bg-slate-100 border border-slate-300 overflow-hidden flex items-end justify-center relative shadow-xs">
-            <img
-              src="/assets/kta/member_photo.png"
-              alt={person.name}
-              className="w-full h-full object-cover object-top"
-            />
-          </div>
+      {/* Bottom 50.8%: White Body with 3 Columns: Member Photo (Left) + Member Details (Center) + B&W QR Code (Right) */}
+      <div className="w-full h-[50.8%] bg-white px-[5.5%] py-[2.8%] flex items-center justify-between gap-[3.5%]">
+        {/* Left: Dynamic Member Portrait Photo on Clean White Background */}
+        <div className="w-[18.5%] h-full flex items-end justify-center shrink-0 overflow-hidden bg-white">
+          <img
+            src={photoSrc}
+            alt={activePerson.name}
+            className="w-full h-[96%] object-cover object-top"
+            onError={(e) => {
+              e.currentTarget.src = '/assets/kta/member_photo.png';
+            }}
+          />
         </div>
 
-        {/* Identitas Anggota */}
-        <div className="flex-1 min-w-0 flex flex-col justify-center leading-tight">
-          {/* NIK / Nomor KTA */}
-          <div className="font-extrabold text-xs sm:text-sm text-slate-900 tracking-tight font-mono tabular-nums truncate">
-            {nikNumber}
+        {/* Center: Dynamic Member Data (7 Crisp Lines as in Reference) */}
+        <div className="flex-1 min-w-0 flex flex-col justify-center text-left">
+          {/* 1. 16-Digit KTA / NIK ID */}
+          <div className="font-bold text-[12px] sm:text-[15.5px] text-[#222222] tracking-[0.04em] leading-[1.15] tabular-nums truncate">
+            {ktaId16}
           </div>
 
-          {/* Nama Anggota */}
-          <div className="font-bold text-xs sm:text-sm text-slate-900 capitalize truncate mt-0.5">
-            {person.name}
+          {/* 2. Member Full Name */}
+          <div className="font-bold text-[11.5px] sm:text-[15px] text-[#222222] leading-[1.2] truncate mt-[1px]">
+            {activePerson.name}
           </div>
 
-          {/* Tempat & Tanggal Lahir */}
-          <div className="text-[9px] sm:text-[10px] text-slate-600 mt-0.5 truncate">
+          {/* 3. Birthplace / Date */}
+          <div className="text-[8px] sm:text-[10px] text-[#666666] font-normal leading-[1.26] mt-[3px] truncate">
             {birthPlaceDate}
           </div>
 
-          {/* Alamat Domisili Lengkap */}
-          <div className="text-[8px] sm:text-[9.5px] text-slate-500 line-clamp-2 mt-0.5 leading-snug">
-            {fullAddress}
+          {/* 4. Address Line 1 (RT/RW) */}
+          <div className="text-[8px] sm:text-[10px] text-[#666666] font-normal leading-[1.26] truncate">
+            {addressLine1}
           </div>
 
-          {/* Nomor Telepon */}
-          <div className="text-[8.5px] sm:text-[10px] text-slate-600 font-mono mt-0.5">
+          {/* 5. Address Line 2 (Village/District) */}
+          <div className="text-[8px] sm:text-[10px] text-[#666666] font-normal leading-[1.26] truncate">
+            {addressLine2}
+          </div>
+
+          {/* 6. City & Province */}
+          <div className="text-[8px] sm:text-[10px] text-[#666666] font-normal leading-[1.26] truncate">
+            {cityProvinceLine}
+          </div>
+
+          {/* 7. Telephone */}
+          <div className="text-[8px] sm:text-[10px] text-[#666666] font-normal leading-[1.26] mt-[2px] truncate">
             Telp : {phoneFormatted}
           </div>
         </div>
 
-        {/* QR Code Verifikasi Resmi */}
-        <div className="shrink-0 flex flex-col items-center justify-center pl-1">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white p-1 rounded-lg border border-slate-300 shadow-2xs flex items-center justify-center relative">
-            {/* Real Perindo QR Replica */}
-            <svg
-              viewBox="0 0 100 100"
-              className="w-full h-full"
-              fill="#102C63"
-            >
-              {/* Corner 1 */}
-              <rect x="0" y="0" width="28" height="28" rx="2" fill="#102C63" />
-              <rect x="4" y="4" width="20" height="20" rx="1" fill="#FFFFFF" />
-              <rect x="8" y="8" width="12" height="12" rx="1" fill="#102C63" />
-
-              {/* Corner 2 */}
-              <rect x="72" y="0" width="28" height="28" rx="2" fill="#102C63" />
-              <rect x="76" y="4" width="20" height="20" rx="1" fill="#FFFFFF" />
-              <rect x="80" y="8" width="12" height="12" rx="1" fill="#102C63" />
-
-              {/* Corner 3 */}
-              <rect x="0" y="72" width="28" height="28" rx="2" fill="#102C63" />
-              <rect x="4" y="76" width="20" height="20" rx="1" fill="#FFFFFF" />
-              <rect x="8" y="80" width="12" height="12" rx="1" fill="#102C63" />
-
-              {/* Pattern modules */}
-              <rect x="36" y="4" width="8" height="8" fill="#102C63" />
-              <rect x="52" y="8" width="10" height="6" fill="#102C63" />
-              <rect x="36" y="18" width="6" height="8" fill="#102C63" />
-              <rect x="48" y="20" width="14" height="6" fill="#102C63" />
-
-              <rect x="6" y="36" width="8" height="6" fill="#102C63" />
-              <rect x="18" y="38" width="8" height="10" fill="#102C63" />
-              <rect x="8" y="52" width="12" height="6" fill="#102C63" />
-
-              {/* Center watermark box */}
-              <rect x="38" y="38" width="24" height="24" rx="4" fill="#D7283F" />
-              <circle cx="50" cy="50" r="7" fill="#FFFFFF" />
-              <circle cx="50" cy="50" r="4" fill="#102C63" />
-
-              {/* Bottom right modules */}
-              <rect x="36" y="74" width="8" height="8" fill="#102C63" />
-              <rect x="52" y="78" width="10" height="6" fill="#102C63" />
-              <rect x="76" y="36" width="8" height="8" fill="#102C63" />
-              <rect x="88" y="48" width="8" height="10" fill="#102C63" />
-              <rect x="74" y="72" width="10" height="8" fill="#102C63" />
-              <rect x="88" y="86" width="8" height="8" fill="#102C63" />
-            </svg>
-          </div>
+        {/* Right: Crisp Black & White QR Code (Unique per Member) */}
+        <div className="w-[22%] aspect-square shrink-0 flex items-center justify-center bg-white">
+          <svg
+            viewBox="0 0 17 17"
+            className="w-full h-full"
+            shapeRendering="crispEdges"
+            aria-label={`QR KTA ${ktaId16}`}
+          >
+            <rect width="17" height="17" fill="#FFFFFF" />
+            {qrMatrix.map((row, rIdx) =>
+              row.map((cell, cIdx) =>
+                cell ? (
+                  <rect
+                    key={`${rIdx}-${cIdx}`}
+                    x={cIdx}
+                    y={rIdx}
+                    width={1}
+                    height={1}
+                    fill="#000000"
+                  />
+                ) : null
+              )
+            )}
+          </svg>
         </div>
       </div>
     </div>
   );
 
-  // SISI BELAKANG (BACK CARD)
+  // SISI BELAKANG (100% Matching Reference Layout, Proportions, Logo, Rules & Ketum Hero)
   const renderBackCard = () => (
-    <div className="w-full max-w-[500px] aspect-[85.6/53.98] bg-white rounded-xl sm:rounded-2xl shadow-xl border border-slate-300 overflow-hidden flex flex-col justify-between relative select-none font-sans text-slate-900">
-      {/* 1. Header Putih Logo Partai Perindo Persatuan Indonesia */}
-      <div className="px-4 py-1.5 sm:py-2 flex items-center gap-2 bg-white border-b border-slate-100">
-        <img
-          src="/assets/kta/perindo_logo.png"
-          alt="Sayap Perindo"
-          className="h-5 sm:h-6 object-contain"
-          onError={(e) => {
-            e.currentTarget.style.display = 'none';
-          }}
-        />
-        <div className="flex flex-col leading-none">
-          <span className="font-extrabold text-[11px] sm:text-xs text-[#102C63] tracking-wide">
-            PARTAI PERINDO
-          </span>
-          <span className="font-extrabold text-[9px] sm:text-[10px] text-[#D7283F] tracking-wider uppercase mt-0.5">
-            PERSATUAN INDONESIA
-          </span>
-        </div>
-      </div>
-
-      {/* 2. Badan Tengah (Latar Biru Tua & Merah) berisi 3 Ketentuan + Foto Ketum */}
-      <div className="flex-1 bg-gradient-to-r from-[#102C63] via-[#102C63] to-[#B21F35] text-white px-3 sm:px-4 py-2 sm:py-2.5 flex items-stretch justify-between relative overflow-hidden">
-        {/* Kolom Kiri: 3 Ketentuan Resmi */}
-        <div className="w-[62%] sm:w-[65%] flex flex-col justify-between text-[7.5px] sm:text-[9px] leading-tight text-white/95 pr-2 space-y-1.5">
-          <div className="flex items-start gap-1">
-            <span className="font-bold">1.</span>
-            <span>Kartu ini merupakan Kartu Tanda Anggota Partai Perindo.</span>
-          </div>
-
-          <div className="flex items-start gap-1">
-            <span className="font-bold">2.</span>
-            <span>
-              Penggunaan kartu ini diatur menurut ketentuan dan syarat-syarat sebagaimana tertera dalam peraturan organisasi Partai Perindo.
-            </span>
-          </div>
-
-          <div className="flex items-start gap-1">
-            <span className="font-bold">3.</span>
-            <div>
-              <span>Apabila menemukan kartu ini harap dikembalikan ke alamat pemilik kartu atau ke alamat kantor DPP Partai Perindo di :</span>
-              <div className="mt-0.5 text-white/85 text-[7px] sm:text-[8px] leading-tight font-medium">
-                Jl. Pangeran Diponegoro 29, Menteng, Jakarta Pusat 10310, Indonesia. <span className="underline">www.partaiperindo.com</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Kolom Kanan: Foto Resmi Ketua Umum Angela H. Tanoesoedibjo */}
-        <div className="w-[38%] sm:w-[35%] relative flex items-end justify-center pointer-events-none">
-          <img
-            src="/assets/kta/angela_ketum.png"
-            alt="Angela H. Tanoesoedibjo - Ketua Umum"
-            className="h-[125%] max-w-none object-contain drop-shadow-md transform translate-y-3"
-          />
-        </div>
-      </div>
-
-      {/* 3. Footer Putih dengan Nama Ketum & Media Sosial */}
-      <div className="bg-white px-4 py-1 sm:py-1.5 flex items-center justify-between border-t border-slate-100">
-        <div>
-          <div className="text-[8px] sm:text-[9px] text-slate-500 font-medium leading-none">
-            Ketua Umum
-          </div>
-          <div className="text-[10px] sm:text-xs font-black text-slate-900 leading-tight mt-0.5">
-            Angela H. Tanoesoedibjo
-          </div>
-        </div>
-
-        {/* Social Media Handles */}
-        <div className="flex items-center gap-1 sm:gap-1.5 text-[8px] sm:text-[9px] font-semibold text-slate-600">
-          <span className="w-3.5 h-3.5 rounded-full bg-slate-900 text-white flex items-center justify-center text-[7px] font-bold">X</span>
-          <span className="w-3.5 h-3.5 rounded-full bg-blue-600 text-white flex items-center justify-center text-[7px] font-bold">f</span>
-          <span className="w-3.5 h-3.5 rounded-full bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 text-white flex items-center justify-center text-[7px] font-bold">ig</span>
-          <span className="w-3.5 h-3.5 rounded-full bg-black text-white flex items-center justify-center text-[7px] font-bold">tik</span>
-          <span className="font-mono text-[8px] sm:text-[9px] text-slate-700 ml-0.5">@PartaiPerindo</span>
-        </div>
-      </div>
+    <div className="w-full max-w-[560px] aspect-[622/363] bg-white overflow-hidden relative select-none font-sans">
+      <img
+        src="/assets/kta/kta_back_official.png"
+        alt="Sisi Belakang KTA Resmi Partai Perindo - Ketua Umum Angela H. Tanoesoedibjo"
+        className="w-full h-full object-fill pointer-events-none"
+      />
     </div>
   );
 
   return (
     <div className="space-y-4">
-      {/* View Mode & Flip Controls Bar */}
+      {/* Hidden File Input for Custom Member Photo */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        onChange={handlePhotoUpload}
+        className="hidden"
+      />
+
+      {/* View Mode & Photo Controls Bar */}
       {showControls && (
-        <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 p-2.5 rounded-xl border border-slate-200 text-xs">
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50/90 p-2.5 rounded-xl border border-slate-200 text-xs">
           {/* Segmented Mode Button */}
-          <div className="flex items-center gap-1 p-1 bg-white rounded-lg border border-slate-200">
+          <div className="flex items-center gap-1 p-1 bg-white rounded-lg border border-slate-200 shadow-2xs">
             <button
+              type="button"
+              onClick={() => setViewMode('side-by-side')}
+              className={`px-3 py-1 rounded-md font-medium transition-all cursor-pointer ${
+                viewMode === 'side-by-side'
+                  ? 'bg-[#102C63] text-white shadow-xs font-semibold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Depan & Belakang (2 Sisi)
+            </button>
+            <button
+              type="button"
               onClick={() => {
                 setViewMode('flip');
                 setIsFlipped(false);
               }}
-              className={`px-3 py-1 rounded-md font-medium transition-colors ${
+              className={`px-3 py-1 rounded-md font-medium transition-all cursor-pointer ${
                 viewMode === 'flip' && !isFlipped
-                  ? 'bg-slate-900 text-white shadow-2xs font-semibold'
+                  ? 'bg-[#102C63] text-white shadow-xs font-semibold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               Sisi Depan
             </button>
             <button
+              type="button"
               onClick={() => {
                 setViewMode('flip');
                 setIsFlipped(true);
               }}
-              className={`px-3 py-1 rounded-md font-medium transition-colors ${
+              className={`px-3 py-1 rounded-md font-medium transition-all cursor-pointer ${
                 viewMode === 'flip' && isFlipped
-                  ? 'bg-slate-900 text-white shadow-2xs font-semibold'
+                  ? 'bg-[#102C63] text-white shadow-xs font-semibold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
               Sisi Belakang
             </button>
-            <button
-              onClick={() => setViewMode('side-by-side')}
-              className={`px-3 py-1 rounded-md font-medium transition-colors ${
-                viewMode === 'side-by-side'
-                  ? 'bg-slate-900 text-white shadow-2xs font-semibold'
-                  : 'text-slate-600 hover:text-slate-900'
-              }`}
-            >
-              Berdampingan (Depan & Belakang)
-            </button>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center gap-2">
+          {/* Action Buttons: Upload Photo + Flip + Print */}
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-700 font-semibold hover:bg-slate-100 transition-colors shadow-2xs cursor-pointer"
+              title="Unggah pasfoto baru untuk KTA anggota ini"
+            >
+              <Camera className="w-3.5 h-3.5 text-[#D7283F]" />
+              <span>Ganti Foto KTA</span>
+            </button>
+
             {viewMode === 'flip' && (
               <button
+                type="button"
                 onClick={() => setIsFlipped(!isFlipped)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-700 font-semibold hover:bg-slate-100 transition-colors shadow-2xs"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-300 rounded-lg text-slate-700 font-semibold hover:bg-slate-100 transition-colors shadow-2xs cursor-pointer"
               >
-                <RotateCw className="w-3.5 h-3.5 text-blue-600" />
-                <span>Putar Kartu (3D)</span>
+                <RotateCw className="w-3.5 h-3.5 text-[#1667C7]" />
+                <span>Balik Kartu</span>
               </button>
             )}
 
             <button
+              type="button"
               onClick={handleDownload}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#102C63] text-white rounded-lg font-semibold hover:bg-[#0c224d] transition-colors shadow-2xs"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-[#102C63] hover:bg-[#D7283F] text-white rounded-lg font-semibold transition-colors shadow-2xs cursor-pointer"
             >
               {downloadSuccess ? (
                 <>
-                  <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>KTA Terunduh</span>
+                  <Check className="w-3.5 h-3.5 text-emerald-300" />
+                  <span>Siap Cetak</span>
                 </>
               ) : (
                 <>
@@ -310,39 +406,48 @@ export const KtaCard: React.FC<KtaCardProps> = ({
 
       {/* Render Cards Container */}
       {viewMode === 'side-by-side' ? (
-        /* Side by Side Display */
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 justify-items-center">
-          <div className="space-y-2 w-full max-w-[500px]">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block text-center">
-              Tampak Depan (Front View)
-            </span>
-            {renderFrontCard()}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 justify-items-center items-start">
+          <div className="space-y-2 w-full max-w-[560px]">
+            <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-600 px-1">
+              <span>Sisi Depan — Data & Foto Anggota</span>
+              <span className="font-mono text-[10px] text-slate-400">{ktaId16}</span>
+            </div>
+            <TiltCardWrapper enableTilt={true}>{renderFrontCard()}</TiltCardWrapper>
           </div>
 
-          <div className="space-y-2 w-full max-w-[500px]">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 block text-center">
-              Tampak Belakang (Back View)
-            </span>
-            {renderBackCard()}
+          <div className="space-y-2 w-full max-w-[560px]">
+            <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-600 px-1">
+              <span>Sisi Belakang — Ketentuan & Ketua Umum</span>
+              <span className="font-mono text-[10px] text-slate-400">RESMI DPP</span>
+            </div>
+            <TiltCardWrapper enableTilt={true}>{renderBackCard()}</TiltCardWrapper>
           </div>
         </div>
       ) : (
-        /* Flip Display with 3D Perspective */
         <div className="flex justify-center py-2">
-          <div
-            className="w-full max-w-[500px] cursor-pointer transition-transform duration-500 transform-gpu hover:scale-[1.01]"
-            onClick={() => setIsFlipped(!isFlipped)}
-            title="Klik untuk membalik kartu (Depan / Belakang)"
-          >
-            {isFlipped ? renderBackCard() : renderFrontCard()}
+          <div className="w-full max-w-[560px] perspective-1000">
+            <motion.div
+              className="relative w-full aspect-[622/363] preserve-3d cursor-pointer"
+              animate={{ rotateY: isFlipped ? 180 : 0 }}
+              transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
+              onClick={() => setIsFlipped(!isFlipped)}
+              title="Klik untuk membalik kartu (Depan / Belakang)"
+            >
+              <div className="absolute inset-0 backface-hidden">
+                <TiltCardWrapper enableTilt={!isFlipped}>
+                  {renderFrontCard()}
+                </TiltCardWrapper>
+              </div>
+
+              <div className="absolute inset-0 backface-hidden rotate-y-180">
+                <TiltCardWrapper enableTilt={isFlipped}>
+                  {renderBackCard()}
+                </TiltCardWrapper>
+              </div>
+            </motion.div>
           </div>
         </div>
       )}
-
-      {/* Helpful Hint */}
-      <div className="text-center text-[11px] text-slate-400">
-        Klik kartu untuk memutar antara <strong>Tampak Depan</strong> dan <strong>Tampak Belakang</strong> sesuai standar format fisik Partai Perindo.
-      </div>
     </div>
   );
 };

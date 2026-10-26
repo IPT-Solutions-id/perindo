@@ -1,21 +1,18 @@
 import React, { useState } from 'react';
 import {
-  TrendingUp,
   Plus,
   Search,
-  DollarSign,
-  Users,
   Calendar,
   CheckCircle2,
-  Clock,
   X,
+  UserPlus,
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
 import { Program } from '../../types';
 
 export const ProgramsPage: React.FC = () => {
-  const { programs, addProgram } = useData();
+  const { programs, addProgram, updateProgramProgress } = useData();
   const { workspace } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,21 +57,21 @@ export const ProgramsPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Page Header in Fresh Light Blue */}
+      <div className="bg-gradient-to-r from-sky-50 via-blue-50/70 to-white rounded-2xl border border-sky-200 p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
-            Pengelolaan Program Kerja
+          <div className="text-xs font-semibold text-sky-700 uppercase tracking-wider">
+            Pengelolaan Program Kerja ({workspace?.level} — {workspace?.unitName})
           </div>
           <h1 className="text-2xl font-bold text-slate-900 mt-1">Program Pemberdayaan & UMKM</h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Realisasi program kerakyatan, alokasi anggaran, dan capaian target kader binaan.
+          <p className="text-xs text-slate-600 mt-1">
+            Realisasi program kerakyatan harian, pencatatan penerima manfaat, dan serapan anggaran berjenjang.
           </p>
         </div>
 
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#102C63] hover:bg-[#0c224d] text-white rounded-xl text-xs font-semibold transition-colors shadow-2xs"
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold transition-colors shadow-2xs cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Buat Program Baru</span>
@@ -149,13 +146,13 @@ export const ProgramsPage: React.FC = () => {
                   <div>
                     <div className="flex justify-between text-[11px] text-slate-500 mb-1">
                       <span>Partisipan:</span>
-                      <span className="font-mono font-medium text-slate-800">
+                      <span className="font-mono font-medium text-slate-800 tabular-nums">
                         {prog.currentParticipants} / {prog.targetParticipants} Orang ({participantPercent}%)
                       </span>
                     </div>
                     <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                       <div
-                        className="bg-blue-600 h-full rounded-full"
+                        className="bg-blue-600 h-full rounded-full transition-all"
                         style={{ width: `${participantPercent}%` }}
                       ></div>
                     </div>
@@ -164,13 +161,13 @@ export const ProgramsPage: React.FC = () => {
                   <div>
                     <div className="flex justify-between text-[11px] text-slate-500 mb-1">
                       <span>Penyerapan Anggaran:</span>
-                      <span className="font-mono font-medium text-slate-800">
+                      <span className="font-mono font-medium text-slate-800 tabular-nums">
                         Rp{(prog.budgetSpent / 1000000).toFixed(1)}Jt / Rp{(prog.budgetAllocated / 1000000).toFixed(1)}Jt
                       </span>
                     </div>
                     <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
                       <div
-                        className="bg-red-500 h-full rounded-full"
+                        className="bg-red-500 h-full rounded-full transition-all"
                         style={{ width: `${budgetPercent}%` }}
                       ></div>
                     </div>
@@ -178,12 +175,41 @@ export const ProgramsPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-                <span className="flex items-center gap-1">
-                  <Calendar className="w-3.5 h-3.5" />
-                  {prog.startDate} – {prog.endDate}
-                </span>
-                <span className="font-mono text-slate-500">{prog.category}</span>
+              <div className="space-y-2.5 pt-3 border-t border-slate-100">
+                <div className="flex items-center justify-between text-[11px] text-slate-400">
+                  <span className="flex items-center gap-1">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {prog.startDate} – {prog.endDate}
+                  </span>
+                  <span className="font-mono text-slate-500">{prog.category}</span>
+                </div>
+
+                {/* Daily Action Bar */}
+                {prog.status !== 'SELESAI' && (
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      onClick={() => updateProgramProgress(prog.id, 5, 2500000)}
+                      className="flex-1 py-1.5 px-2.5 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>+5 Penerima & Realisasi</span>
+                    </button>
+                    <button
+                      onClick={() =>
+                        updateProgramProgress(
+                          prog.id,
+                          Math.max(1, prog.targetParticipants - prog.currentParticipants),
+                          Math.max(0, prog.budgetAllocated - prog.budgetSpent)
+                        )
+                      }
+                      className="py-1.5 px-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+                      title="Tandai Selesai"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Selesai</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -192,15 +218,15 @@ export const ProgramsPage: React.FC = () => {
 
       {/* Add Program Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
-            <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-sky-950/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-sky-200 overflow-hidden">
+            <div className="p-4 bg-gradient-to-r from-sky-500 to-blue-600 text-white flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider">
                 Usulkan Program Kerja Baru
               </span>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-sky-100 hover:text-white cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -240,7 +266,7 @@ export const ProgramsPage: React.FC = () => {
                   <label className="block font-semibold text-slate-700 mb-1">Kategori</label>
                   <select
                     value={category}
-                    onChange={(e) => setCategory(e.target.value as any)}
+                    onChange={(e) => setCategory(e.target.value as Program['category'])}
                     className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-hidden"
                   >
                     <option value="EKONOMI_UMKM">Ekonomi & UMKM</option>
@@ -276,21 +302,21 @@ export const ProgramsPage: React.FC = () => {
                 />
               </div>
 
-              <div className="p-3 bg-blue-50 rounded-xl border border-blue-200 text-[11px] text-blue-900">
-                Program baru akan otomatis berstatus <strong>DIAJUKAN</strong> dan menunggu verifikasi anggaran DPP.
+              <div className="p-3 bg-sky-50 rounded-xl border border-sky-200 text-[11px] text-sky-900">
+                Program baru akan otomatis tercatat atas nama unit <strong>{workspace?.unitName}</strong>.
               </div>
 
               <div className="flex justify-end gap-2 pt-2">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50"
+                  className="px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#102C63] text-white rounded-lg font-semibold hover:bg-[#0c224d]"
+                  className="px-5 py-2 bg-sky-600 text-white rounded-lg font-semibold hover:bg-sky-500 cursor-pointer"
                 >
                   Simpan Usulan Program
                 </button>

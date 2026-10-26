@@ -59,21 +59,21 @@ export const ServicesPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Page Header in Fresh Light Blue */}
+      <div className="bg-gradient-to-r from-sky-50 via-blue-50/70 to-white rounded-2xl border border-sky-200 p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
-            Pusat Pengaduan & Aspirasi
+          <div className="text-xs font-semibold text-sky-700 uppercase tracking-wider">
+            Pusat Pengaduan & Aspirasi ({workspace?.level} — {workspace?.unitName})
           </div>
           <h1 className="text-2xl font-bold text-slate-900 mt-1">Layanan Kader & Bantuan Warga</h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-600 mt-1">
             Penanganan tiket pembaruan data KTA, advokasi hukum LBH, permohonan baksos, dan keluhan ranting.
           </p>
         </div>
 
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#102C63] hover:bg-[#0c224d] text-white rounded-xl text-xs font-semibold transition-colors shadow-2xs"
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold transition-colors shadow-2xs cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Buat Tiket Baru</span>
@@ -184,15 +184,15 @@ export const ServicesPage: React.FC = () => {
 
       {/* Create Ticket Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
-            <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-sky-950/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-sky-200 overflow-hidden">
+            <div className="p-4 bg-gradient-to-r from-sky-500 to-blue-600 text-white flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider">
                 Ajukan Tiket Aspirasi / Layanan
               </span>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-sky-100 hover:text-white cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -267,7 +267,7 @@ export const ServicesPage: React.FC = () => {
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#102C63] text-white rounded-lg font-semibold hover:bg-[#0c224d]"
+                  className="px-5 py-2 bg-sky-600 text-white rounded-lg font-semibold hover:bg-sky-500 cursor-pointer"
                 >
                   Kirimkan Tiket
                 </button>

@@ -1,0 +1,63 @@
+name: CI — Lint, Typecheck & Build Verification
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+      - develop
+      - 'feature/**'
+      - 'fix/**'
+      - 'hotfix/**'
+  pull_request:
+    branches:
+      - main
+      - staging
+      - develop
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-and-build:
+    name: TypeScript Check & Vite Production Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20 LTS
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Verify TypeScript Types (npm run lint)
+        run: npm run lint
+
+      - name: Verify Vercel Configuration (vercel.json)
+        run: node -e "JSON.parse(require('fs').readFileSync('./vercel.json', 'utf8')); console.log('vercel.json valid');"
+
+      - name: Build Production Bundle (npm run build)
+        run: npm run build
+
+      - name: Verify Build Output & KTA Assets
+        run: |
+          test -f dist/index.html
+          test -f dist/assets/kta/kta_front_header.png
+          test -f dist/assets/kta/kta_back_official.png
+          test -f dist/assets/kta/angela_hero_full.png
+          echo "Production build & KTA Digital static assets verified successfully!"
+
+      - name: Upload Production Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: perindo-one-dist-${{ github.sha }}
+          path: dist/
+          retention-days: 7

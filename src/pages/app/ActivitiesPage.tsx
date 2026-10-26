@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  CalendarCheck,
   Plus,
   MapPin,
   Clock,
@@ -8,13 +7,13 @@ import {
   CheckCircle2,
   X,
   Search,
+  UserPlus,
 } from 'lucide-react';
 import { useData } from '../../context/DataContext';
 import { useAuth } from '../../context/AuthContext';
-import { Activity } from '../../types';
 
 export const ActivitiesPage: React.FC = () => {
-  const { activities, addActivity } = useData();
+  const { activities, addActivity, updateActivityStatus } = useData();
   const { workspace, person } = useAuth();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -44,9 +43,9 @@ export const ActivitiesPage: React.FC = () => {
       location,
       notes,
       unitId: workspace?.unitId || 'UNIT-DPC-MENTENG',
-      attendeesCount: 0,
+      attendeesCount: 25,
       status: 'TERJADWAL',
-      coordinator: person?.name || 'Pengurus Unit',
+      coordinator: `${person?.name || 'Pengurus'} (${workspace?.unitName})`,
     });
 
     setIsAddModalOpen(false);
@@ -57,21 +56,21 @@ export const ActivitiesPage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Page Header in Fresh Light Blue */}
+      <div className="bg-gradient-to-r from-sky-50 via-blue-50/70 to-white rounded-2xl border border-sky-200 p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
-            Jadwal Operasional
+          <div className="text-xs font-semibold text-sky-700 uppercase tracking-wider">
+            Jadwal Operasional Harian ({workspace?.level} — {workspace?.unitName})
           </div>
           <h1 className="text-2xl font-bold text-slate-900 mt-1">Agenda & Kegiatan Lapangan</h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Koordinasi konsolidasi pengurus, rembug ranting, workshop kader, dan baksos warga.
+          <p className="text-xs text-slate-600 mt-1">
+            Koordinasi konsolidasi pengurus, rembug ranting, workshop kader, dan absensi kehadiran lapangan.
           </p>
         </div>
 
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#102C63] hover:bg-[#0c224d] text-white rounded-xl text-xs font-semibold transition-colors shadow-2xs"
+          className="inline-flex items-center gap-1.5 px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold transition-colors shadow-2xs cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Jadwalkan Kegiatan Baru</span>
@@ -113,9 +112,34 @@ export const ActivitiesPage: React.FC = () => {
                 <h3 className="font-bold text-base text-slate-900 mt-1.5">{act.title}</h3>
               </div>
 
-              <div className="flex items-center gap-1.5 text-xs text-slate-500 font-mono">
-                <Users className="w-4 h-4 text-slate-400" />
-                <span>{act.attendeesCount} Peserta Hadir</span>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 text-xs text-slate-600 font-mono tabular-nums bg-slate-100 px-2.5 py-1 rounded-lg">
+                  <Users className="w-4 h-4 text-slate-500" />
+                  <span>{act.attendeesCount} Peserta Hadir</span>
+                </div>
+
+                {act.status !== 'SELESAI' && (
+                  <>
+                    <button
+                      onClick={() =>
+                        updateActivityStatus(act.id, act.status, act.attendeesCount + 10)
+                      }
+                      className="px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <UserPlus className="w-3.5 h-3.5" />
+                      <span>+10 Absensi</span>
+                    </button>
+                    <button
+                      onClick={() =>
+                        updateActivityStatus(act.id, 'SELESAI', act.attendeesCount)
+                      }
+                      className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-semibold flex items-center gap-1 transition-colors cursor-pointer"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      <span>Tandai Selesai</span>
+                    </button>
+                  </>
+                )}
               </div>
             </div>
 
@@ -124,7 +148,9 @@ export const ActivitiesPage: React.FC = () => {
                 <Clock className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-semibold text-slate-900">Waktu Pelaksanaan:</span>
-                  <div>{act.date} · {act.time}</div>
+                  <div>
+                    {act.date} · {act.time}
+                  </div>
                 </div>
               </div>
 
@@ -138,7 +164,9 @@ export const ActivitiesPage: React.FC = () => {
             </div>
 
             <div className="pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-slate-500">
-              <div>Koordinator: <strong className="text-slate-700">{act.coordinator}</strong></div>
+              <div>
+                Koordinator: <strong className="text-slate-700">{act.coordinator}</strong>
+              </div>
               <div className="text-[11px] text-slate-400 italic">{act.notes}</div>
             </div>
           </div>
@@ -147,15 +175,15 @@ export const ActivitiesPage: React.FC = () => {
 
       {/* Add Activity Modal */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-200 overflow-hidden">
-            <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-sky-950/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-sky-200 overflow-hidden">
+            <div className="p-4 bg-gradient-to-r from-sky-500 to-blue-600 text-white flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider">
                 Jadwalkan Agenda Kegiatan Baru
               </span>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="text-slate-400 hover:text-white"
+                className="text-sky-100 hover:text-white cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -228,13 +256,13 @@ export const ActivitiesPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50"
+                  className="px-4 py-2 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-50 cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#102C63] text-white rounded-lg font-semibold hover:bg-[#0c224d]"
+                  className="px-5 py-2 bg-sky-600 text-white rounded-lg font-semibold hover:bg-sky-500 cursor-pointer"
                 >
                   Simpan Jadwal
                 </button>

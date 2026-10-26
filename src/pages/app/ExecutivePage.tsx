@@ -19,35 +19,35 @@ export const ExecutivePage: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="bg-slate-950 text-white rounded-2xl p-6 sm:p-8 shadow-xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header in Fresh Light Blue */}
+      <div className="bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600 text-white rounded-2xl p-6 sm:p-8 shadow-md border border-sky-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-            <span className="text-xs font-mono font-bold tracking-widest uppercase text-sky-400">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-300"></span>
+            <span className="text-xs font-mono font-bold tracking-widest uppercase text-sky-100">
               PUSAT KOMANDO DPP NASIONAL (COMMAND CENTER)
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-white mt-2">
             Pemantauan Kesiapan & Operasi Struktur Partai
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
+          <p className="text-xs text-sky-50 mt-1">
             Data statistik makro diolah dari seluruh struktur DPW dan DPD tanpa mengekspos identitas pribadi (PII) perseorangan kader.
           </p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
-          <div className="bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-right">
-            <div className="text-[10px] text-slate-400 uppercase font-mono">Status Sistem</div>
-            <div className="text-xs font-bold text-emerald-400 font-mono">SINKRONISASI 100%</div>
+          <div className="bg-white/15 backdrop-blur-2xs border border-white/30 px-3.5 py-2 rounded-xl text-right">
+            <div className="text-[10px] text-sky-100 uppercase font-mono">Status Sistem</div>
+            <div className="text-xs font-bold text-white font-mono">SINKRONISASI 100%</div>
           </div>
         </div>
       </div>
 
       {/* Privacy Guarantee Banner */}
-      <div className="p-4 rounded-xl bg-blue-50/80 border border-blue-200 text-blue-900 text-xs flex items-center justify-between">
+      <div className="p-4 rounded-xl bg-sky-50 border border-sky-200 text-sky-900 text-xs flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <Lock className="w-4 h-4 text-blue-700 shrink-0" />
+          <Lock className="w-4 h-4 text-sky-600 shrink-0" />
           <span>
             <strong>Prinsip Privacy by Design:</strong> Dashboard eksekutif hanya menyajikan angka rekapitulasi, rasio pemenuhan struktur, dan realisasi anggaran. Identitas pribadi kader dilindungi dari pelacakan sepihak.
           </span>
@@ -56,10 +56,10 @@ export const ExecutivePage: React.FC = () => {
 
       {/* Aggregate Metrics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-2xs">
-          <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-medium">Total Kader Nasional</span>
-            <Users className="w-4 h-4 text-blue-600" />
+        <div className="bg-sky-50/70 p-5 rounded-2xl border border-sky-200 shadow-2xs">
+          <div className="flex items-center justify-between text-sky-800 mb-2">
+            <span className="text-xs font-semibold">Total Kader Nasional</span>
+            <Users className="w-4 h-4 text-sky-600" />
           </div>
           <div className="text-3xl font-black text-slate-900 font-mono tabular-nums">42.500</div>
           <div className="text-[11px] text-emerald-600 mt-1 font-medium">+1.850 bulan berjalan</div>

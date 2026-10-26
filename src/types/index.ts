@@ -1,5 +1,6 @@
 export type UserRole =
   | 'PUBLIC'
+  | 'KETUA_UMUM'
   | 'MEMBER'
   | 'DPRT_MANAGER'
   | 'DPC_MANAGER'
@@ -23,6 +24,11 @@ export interface Person {
   email: string;
   phone: string;
   nikDummy: string; // Fake NIK e.g. "317101******0001"
+  ktaId16?: string; // 16-digit KTA/NIK displayed on card front e.g. "3202018710310001"
+  birthPlaceDate?: string; // e.g. "Sukabumi/31-10-1987"
+  addressLine1?: string; // e.g. "Kp.sirnagalih RT. 04 RW. 29,"
+  addressLine2?: string; // e.g. "Pelabuhanratu, Pelabuhanratu,"
+  photoUrl?: string; // Member portrait URL or Data URI
   city: string;
   province: string;
   avatarSeed: string;
@@ -198,10 +204,32 @@ export interface ApprovalItem {
   title: string;
   type: 'SK_PENGURUS' | 'PROPOSAL_ANGGARAN' | 'SURAT_TUGAS' | 'PERMOHONAN_KTA';
   applicantUnit: string;
+  unitId?: string;
   submittedDate: string;
-  status: 'MENUNGGU_VERIFIKASI_DPP' | 'DISETUJUI_DPP' | 'DIKEMBALIKAN';
+  status:
+    | 'MENUNGGU_REKOMENDASI_WILAYAH'
+    | 'MENUNGGU_VERIFIKASI_DPP'
+    | 'DISETUJUI_DPP'
+    | 'DISAHKAN_KETUA_UMUM'
+    | 'DIKEMBALIKAN';
   notes: string;
   signatoryLevel: OrgLevel;
+}
+
+export interface DirectiveItem {
+  id: string;
+  code: string;
+  title: string;
+  description: string;
+  issuerName: string;
+  issuerRoleTitle: string;
+  targetLevel: 'SEMUA_JENJANG' | 'DPW' | 'DPD' | 'DPC' | 'DPRT';
+  targetUnitId: string; // 'ALL' or specific unitId
+  priority: 'BIASA' | 'PENTING' | 'INSTRUKSI_KHUSUS_KETUM';
+  deadline: string;
+  status: 'BARU_DITERBITKAN' | 'SEDANG_DIKERJAKAN' | 'SELESAI_DILAPORKAN';
+  progressNote: string;
+  createdAt: string;
 }
 
 export interface AuditEvent {
@@ -214,3 +242,4 @@ export interface AuditEvent {
   scopeUnit: string;
   ipAddress: string;
 }
+

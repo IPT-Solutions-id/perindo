@@ -1,0 +1,7 @@
+# Aturan Code Ownership — PERINDO ONE
+# Memastikan perubahan pada konfigurasi produksi, CI/CD, dan komponen KTA Digital diverifikasi
+
+/vercel.json @dpp-perindo-tech
+/.github/ @dpp-perindo-tech
+/src/components/kta/ @dpp-perindo-tech
+/src/context/ @dpp-perindo-tech

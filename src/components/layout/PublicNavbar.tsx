@@ -27,15 +27,18 @@ export const PublicNavbar: React.FC<PublicNavbarProps> = ({
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200">
+      {/* Perindo Brand Hairline Stripe */}
+      <div className="h-[3px] w-full bg-gradient-to-r from-[#102C63] via-[#1667C7] to-[#D7283F]" />
+
       {/* 3-Zone Top Bar Contract */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-8">
         {/* Zone 1: Brand Wordmark */}
         <button
           onClick={() => onNavigate('/')}
-          className="focus:outline-hidden text-left"
+          className="focus:outline-hidden text-left transition-transform hover:scale-[1.02]"
           aria-label="Kembali ke Beranda PERINDO ONE"
         >
-          <WingLogo size={34} />
+          <WingLogo size={36} />
         </button>
 
         {/* Zone 2: 4-5 single-line clean text navigation links */}
@@ -48,8 +51,8 @@ export const PublicNavbar: React.FC<PublicNavbarProps> = ({
                 onClick={() => onNavigate(link.path)}
                 className={`whitespace-nowrap shrink-0 transition-colors py-1 ${
                   isActive
-                    ? 'text-slate-900 font-semibold border-b-2 border-red-600'
-                    : 'hover:text-slate-900'
+                    ? 'text-[#102C63] font-bold border-b-2 border-[#D7283F]'
+                    : 'hover:text-[#102C63]'
                 }`}
               >
                 {link.label}
@@ -58,21 +61,12 @@ export const PublicNavbar: React.FC<PublicNavbarProps> = ({
           })}
         </nav>
 
-        {/* Zone 3: 1 Primary Action */}
+        {/* Zone 3: Primary Action */}
         <div className="flex items-center gap-3 shrink-0">
-          <button
-            onClick={onOpenInspector}
-            className="hidden sm:inline-flex items-center gap-1.5 text-xs text-slate-600 hover:text-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
-            title="Buka panel tester"
-          >
-            <Shield className="w-3.5 h-3.5 text-blue-600" />
-            <span>Role Inspector</span>
-          </button>
-
           {account ? (
             <button
               onClick={() => onNavigate('/app/overview')}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#102C63] hover:bg-[#D7283F] text-white rounded-lg text-xs font-semibold shadow-xs transition-colors whitespace-nowrap shrink-0"
             >
               <span>Buka Aplikasi</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -80,7 +74,7 @@ export const PublicNavbar: React.FC<PublicNavbarProps> = ({
           ) : (
             <button
               onClick={() => onNavigate('/login')}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-semibold shadow-xs transition-colors whitespace-nowrap shrink-0"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#102C63] hover:bg-[#D7283F] text-white rounded-lg text-xs font-semibold shadow-xs transition-colors whitespace-nowrap shrink-0"
             >
               <span>Masuk Portal</span>
               <ArrowRight className="w-3.5 h-3.5" />

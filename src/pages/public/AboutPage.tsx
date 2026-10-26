@@ -74,7 +74,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({ onNavigate }) => {
           <div className="pt-2 flex justify-end">
             <button
               onClick={() => onNavigate('/fitur')}
-              className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-lg text-xs font-semibold hover:bg-slate-800 transition-colors"
+              className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#102C63] hover:bg-[#D7283F] text-white rounded-lg text-xs font-semibold transition-colors shadow-xs"
             >
               <span>Pelajari Fitur Platform</span>
               <ArrowRight className="w-3.5 h-3.5" />

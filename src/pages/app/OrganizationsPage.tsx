@@ -41,23 +41,23 @@ export const OrganizationsPage: React.FC<OrganizationsPageProps> = ({ onOpenInsp
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Page Header in Fresh Light Blue */}
+      <div className="bg-gradient-to-r from-sky-50 via-blue-50/70 to-white rounded-2xl border border-sky-200 p-6 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <div className="text-xs font-semibold text-blue-700 uppercase tracking-wider">
-            Tata Kelola Struktur
+          <div className="text-xs font-semibold text-sky-700 uppercase tracking-wider">
+            Tata Kelola Struktur ({workspace?.level} — {workspace?.unitName})
           </div>
           <h1 className="text-2xl font-bold text-slate-900 mt-1">Hierarki Struktur & Sayap Organisasi</h1>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-600 mt-1">
             Menampilkan jenjang resmi DPP &rarr; DPW &rarr; DPD &rarr; DPC &rarr; DPRt serta organisasi sayap otonom.
           </p>
         </div>
 
         <button
           onClick={onOpenInspector}
-          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition-colors"
+          className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-sky-100 hover:bg-sky-200/80 text-sky-900 border border-sky-200 rounded-xl text-xs font-semibold transition-colors cursor-pointer"
         >
-          <Sliders className="w-3.5 h-3.5 text-blue-700" />
+          <Sliders className="w-3.5 h-3.5 text-sky-600" />
           <span>Uji Isolasi Wilayah di Inspector</span>
         </button>
       </div>
@@ -197,66 +197,66 @@ export const OrganizationsPage: React.FC<OrganizationsPageProps> = ({ onOpenInsp
 
               <button
                 onClick={onOpenInspector}
-                className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold"
+                className="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white rounded-xl text-xs font-semibold cursor-pointer"
               >
                 Buka Demo Inspector
               </button>
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-2xs space-y-6">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-5">
+            <div className="bg-white rounded-2xl border border-sky-200 p-6 sm:p-8 shadow-2xs space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-sky-100 pb-5">
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-blue-100 text-blue-800">
+                    <span className="font-mono text-xs font-bold px-2 py-0.5 rounded bg-sky-100 text-sky-800 border border-sky-200">
                       {selectedUnit.code}
                     </span>
-                    <span className="text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-semibold">
+                    <span className="text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded font-semibold border border-emerald-200">
                       SK AKTIF
                     </span>
                   </div>
                   <h3 className="text-xl font-bold text-slate-900 mt-1.5">{selectedUnit.name}</h3>
-                  <div className="text-xs text-slate-500 mt-0.5">Tingkat Struktur: {selectedUnit.level}</div>
+                  <div className="text-xs text-sky-700 font-medium mt-0.5">Tingkat Struktur: {selectedUnit.level}</div>
                 </div>
 
-                <div className="text-right">
-                  <div className="text-2xl font-bold font-mono text-slate-900 tabular-nums">
+                <div className="text-right bg-sky-50 px-4 py-2 rounded-xl border border-sky-200/80">
+                  <div className="text-2xl font-bold font-mono text-sky-900 tabular-nums">
                     {selectedUnit.totalMembers.toLocaleString('id-ID')}
                   </div>
-                  <div className="text-[11px] text-slate-500">Kader Terdata</div>
+                  <div className="text-[11px] text-sky-700 font-medium">Kader Terdata</div>
                 </div>
               </div>
 
               {/* Unit Specifications */}
               <div className="grid grid-cols-2 gap-4 text-xs">
-                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-slate-500 block text-[10px] uppercase font-semibold">Nomor SK Pengesahan</span>
+                <div className="p-3.5 bg-sky-50/60 rounded-xl border border-sky-100">
+                  <span className="text-sky-700 block text-[10px] uppercase font-semibold">Nomor SK Pengesahan</span>
                   <span className="font-mono font-semibold text-slate-900 block mt-1">{selectedUnit.skNumber}</span>
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">Dikeluarkan oleh tingkat atasan</span>
+                  <span className="text-[10px] text-slate-500 mt-0.5 block">Dikeluarkan oleh tingkat atasan</span>
                 </div>
 
-                <div className="p-3.5 bg-slate-50 rounded-xl border border-slate-100">
-                  <span className="text-slate-500 block text-[10px] uppercase font-semibold">Cakupan Wilayah</span>
+                <div className="p-3.5 bg-sky-50/60 rounded-xl border border-sky-100">
+                  <span className="text-sky-700 block text-[10px] uppercase font-semibold">Cakupan Wilayah</span>
                   <span className="font-semibold text-slate-900 block mt-1">{selectedUnit.regionScope.province}</span>
-                  <span className="text-[10px] text-slate-400 mt-0.5 block">
+                  <span className="text-[10px] text-slate-500 mt-0.5 block">
                     {selectedUnit.regionScope.regency || selectedUnit.regionScope.district || 'Lingkup Wilayah'}
                   </span>
                 </div>
               </div>
 
-              <div className="p-4 rounded-xl bg-blue-50/70 border border-blue-200 text-xs text-slate-700 space-y-2">
-                <div className="font-semibold text-blue-900 flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-blue-600" />
+              <div className="p-4 rounded-xl bg-sky-50/90 border border-sky-200 text-xs text-sky-950 space-y-2">
+                <div className="font-semibold text-sky-800 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-sky-600" />
                   Kewenangan Terverifikasi
                 </div>
-                <p className="text-[11px] leading-relaxed">
+                <p className="text-[11px] leading-relaxed text-sky-900/90">
                   Unit ini berada dalam cakupan kepengurusan yang sah untuk ruang kerja Anda saat ini. Anda dapat mengelola program kerja, menerbitkan surat tugas kegiatan, dan meninjau keanggotaan subordinat.
                 </p>
               </div>
 
-              <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+              <div className="pt-2 border-t border-sky-100 flex items-center justify-between text-xs text-slate-500">
                 <span>Status AD/ART:</span>
-                <span className="font-mono text-[11px] text-slate-700 font-medium">
-                  SIMULASI • MENUNGGU VERIFIKASI DPP
+                <span className="font-mono text-[11px] text-sky-700 font-semibold">
+                  AKTIF • TERINTEGRASI NASIONAL
                 </span>
               </div>
             </div>

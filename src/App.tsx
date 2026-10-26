@@ -133,10 +133,7 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col font-sans text-slate-800 antialiased selection:bg-blue-600 selection:text-white">
-      {/* Simulation Banner Header */}
-      <HeaderBanner onOpenInspector={() => setIsInspectorOpen(true)} />
-
+    <div className="min-h-screen flex flex-col font-sans text-slate-800 antialiased selection:bg-[#102C63] selection:text-white">
       {/* Main Content Router */}
       {isAppRoute ? (
         <AppShell
